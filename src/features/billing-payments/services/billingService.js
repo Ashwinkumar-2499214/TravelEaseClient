@@ -1,10 +1,11 @@
 import api from '../../../utils/api'
 
 const unwrap = (r) => r.data?.data ?? r.data
+const clean = (params) => Object.fromEntries(Object.entries(params).filter(([, v]) => v !== '' && v != null))
 
 const billingService = {
   invoices: {
-    list: (params = {}) => api.get('/invoices', { params: { pageNumber: 1, pageSize: 50, ...params } }).then(unwrap),
+    list: (params = {}) => api.get('/invoices', { params: clean({ pageNumber: 1, pageSize: 50, ...params }) }).then(unwrap),
     create: (payload) => api.post('/invoices', payload).then(unwrap),
     update: (id, payload) => api.put(`/invoices/${id}`, payload).then(unwrap),
     remove: (id) => api.delete(`/invoices/${id}`).then(unwrap),
@@ -23,7 +24,7 @@ const billingService = {
   },
   compliance: {
     reports: {
-      list: (params = {}) => api.get('/compliance/reports', { params }).then(unwrap),
+      list: (params = {}) => api.get('/compliance/reports', { params: clean(params) }).then(unwrap),
       create: (payload) => api.post('/compliance/reports', payload).then(unwrap),
       remove: (id) => api.delete(`/compliance/reports/${id}`).then(unwrap),
       download: (id) => api.get(`/compliance/reports/${id}/download`, { responseType: 'blob' }).then(r => r.data),

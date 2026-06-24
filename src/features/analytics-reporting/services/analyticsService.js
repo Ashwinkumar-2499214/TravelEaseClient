@@ -1,10 +1,11 @@
 import api from '../../../utils/api'
 
 const unwrap = (r) => r.data?.data ?? r.data
+const clean = (params) => Object.fromEntries(Object.entries(params).filter(([, v]) => v !== '' && v != null))
 
 const analyticsService = {
   kpiReports: {
-    list: () => api.get('/analytics/kpi-reports').then(unwrap),
+    list: (params = {}) => api.get('/analytics/kpi-reports', { params: clean(params) }).then(unwrap),
     create: (payload) => api.post('/analytics/kpi-reports', payload).then(unwrap),
     remove: (id) => api.delete(`/analytics/kpi-reports/${id}`).then(unwrap),
     download: (id) => api.get(`/analytics/kpi-reports/${id}/download`, { responseType: 'blob' }).then(r => r.data),

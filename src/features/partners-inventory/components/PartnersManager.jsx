@@ -11,13 +11,41 @@ export default function PartnersManager() {
   const [editPartner, setEditPartner] = useState(null)
   const [form, setForm] = useState(EMPTY)
   const [expandedId, setExpandedId] = useState(null)
+  
+  // 1. Set the initial search input state to 'a' as requested
+  const [searchInput, setSearchInput] = useState('a')
 
-  const load = () => {
+  // 2. Updated Load logic: Uses 'a' if nothing else is provided or typed
+  const load = (searchVal = searchInput) => {
     setLoading(true)
-    partnersService.list().then(setPartners).catch(e => setError(e.message)).finally(() => setLoading(false))
+    setError(null)
+
+    const queryParams = {}
+    const finalSearch = searchVal.trim()
+    
+    // Fallback to 'a' if the search bar is completely cleared or empty
+    queryParams.SearchTerm = finalSearch === '' ? 'a' : finalSearch
+
+    partnersService.list(queryParams)
+      .then(setPartners)
+      .catch(e => setError(e.response?.data?.title || e.message))
+      .finally(() => setLoading(false))
   }
 
+  // Runs immediately on component mount (Sends SearchTerm=a)
   useEffect(() => { load() }, [])
+
+  // Triggered when clicking 'Search' or pressing Enter
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    load(searchInput)
+  }
+
+  // Triggered when clicking 'Clear' (resets back to the default 'a')
+  const handleClearSearch = () => {
+    setSearchInput('a')
+    load('a') 
+  }
 
   const openCreate = () => { setEditPartner(null); setForm(EMPTY); setShowModal(true) }
   const openEdit = (p) => {
@@ -47,7 +75,7 @@ export default function PartnersManager() {
   }
 
   if (loading) return <div className="text-center py-4"><div className="spinner-border" /></div>
-  if (error) return <div className="alert alert-danger">{error}</div>
+  if (error) return <div className="alert alert-danger m-3">{error}</div>
 
   return (
     <div>
@@ -55,6 +83,28 @@ export default function PartnersManager() {
         <h5 className="mb-0">Partners Registry</h5>
         <button className="btn btn-primary btn-sm" onClick={openCreate}><i className="fa-solid fa-plus me-1" />Add Partner</button>
       </div>
+
+      {/* 3. The Search Bar Form UI Container */}
+      <form onSubmit={handleSearchSubmit} className="d-flex gap-2 mb-3">
+        <input 
+          type="text" 
+          className="form-control form-control-sm" 
+          placeholder="Type search here..." 
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+        <button type="submit" className="btn btn-sm btn-outline-secondary">Search</button>
+        {searchInput !== 'a' && (
+          <button 
+            type="button" 
+            className="btn btn-sm btn-link text-secondary text-decoration-none"
+            onClick={handleClearSearch}
+          >
+            Clear
+          </button>
+        )}
+      </form>
+
       <div className="table-responsive">
         <table className="table table-hover table-bordered align-middle">
           <thead className="table-dark">
@@ -82,7 +132,7 @@ export default function PartnersManager() {
                 {expandedId === p.id && <PartnerInventoryRow partnerId={p.id} />}
               </React.Fragment>
             ))}
-            {partners.length === 0 && <tr><td colSpan={5} className="text-center text-muted">No partners.</td></tr>}
+            {partners.length === 0 && <tr><td colSpan={5} className="text-center text-muted">No partners found.</td></tr>}
           </tbody>
         </table>
       </div>

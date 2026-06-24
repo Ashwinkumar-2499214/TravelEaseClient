@@ -18,15 +18,29 @@ export default function ItinerariesManager() {
 
   const load = () => {
     setLoading(true)
-    itinerariesService.list().then(setItins).catch(e => setError(e.message)).finally(() => setLoading(false))
+    itinerariesService.list()
+      .then(setItins)
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [])
 
-  const openCreate = () => { setEditItin(null); setForm(EMPTY); setShowModal(true) }
+  const openCreate = () => { 
+    setEditItin(null)
+    setForm(EMPTY)
+    setShowModal(true) 
+  }
+  
   const openEdit = (i) => {
     setEditItin(i)
-    setForm({ title: i.title || '', description: i.description || '', startDate: i.startDate?.slice(0, 10) || '', endDate: i.endDate?.slice(0, 10) || '' })
+    setForm({ 
+      title: i.title || '', 
+      description: i.description || '', 
+      // Safe string conversion fallback before calling .slice()
+      startDate: String(i.startDate || '').slice(0, 10), 
+      endDate: String(i.endDate || '').slice(0, 10) 
+    })
     setShowModal(true)
   }
 
@@ -34,36 +48,57 @@ export default function ItinerariesManager() {
     e.preventDefault()
     try {
       editItin ? await itinerariesService.update(editItin.id, form) : await itinerariesService.create(form)
-      setShowModal(false); load()
-    } catch (err) { alert(err?.response?.data?.message || err.message) }
+      setShowModal(false)
+      load()
+    } catch (err) { 
+      alert(err?.response?.data?.message || err.message) 
+    }
   }
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete itinerary?')) return
-    try { await itinerariesService.remove(id); load() }
-    catch (err) { alert(err?.response?.data?.message || err.message) }
+    try { 
+      await itinerariesService.remove(id)
+      if (expandedId === id) setExpandedId(null) // Clean up expanded row state
+      load() 
+    } catch (err) { 
+      alert(err?.response?.data?.message || err.message) 
+    }
   }
 
   const handleStatus = async (id, status) => {
-    try { await itinerariesService.patchStatus(id, status); load() }
-    catch (err) { alert(err?.response?.data?.message || err.message) }
+    try { 
+      await itinerariesService.patchStatus(id, status)
+      load() 
+    } catch (err) { 
+      alert(err?.response?.data?.message || err.message) 
+    }
   }
 
   const handleExport = async (id) => {
     try {
       const blob = await itinerariesService.export(id)
       const url = URL.createObjectURL(blob)
-      const a = document.createElement('a'); a.href = url; a.download = `itinerary-${id}.pdf`; a.click()
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `itinerary-${id}.pdf`
+      a.click()
       URL.revokeObjectURL(url)
-    } catch (err) { alert(err?.response?.data?.message || err.message) }
+    } catch (err) { 
+      alert(err?.response?.data?.message || err.message) 
+    }
   }
 
   const handleShare = async (e) => {
     e.preventDefault()
     try {
       await itinerariesService.share(shareModal, { email: shareEmail })
-      alert('Itinerary shared!'); setShareModal(null); setShareEmail('')
-    } catch (err) { alert(err?.response?.data?.message || err.message) }
+      alert('Itinerary shared!')
+      setShareModal(null)
+      setShareEmail('')
+    } catch (err) { 
+      alert(err?.response?.data?.message || err.message) 
+    }
   }
 
   const statusBadge = (s) => {
@@ -78,7 +113,9 @@ export default function ItinerariesManager() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5 className="mb-0">Itineraries</h5>
-        <button className="btn btn-primary btn-sm" onClick={openCreate}><i className="fa-solid fa-plus me-1" />New Itinerary</button>
+        <button className="btn btn-primary btn-sm" onClick={openCreate}>
+          <i className="fa-solid fa-plus me-1" />New Itinerary
+        </button>
       </div>
       <div className="table-responsive">
         <table className="table table-hover table-bordered align-middle">
@@ -183,18 +220,36 @@ function ItineraryBookingsRow({ itineraryId }) {
   const [loading, setLoading] = useState(true)
   const [bookingId, setBookingId] = useState('')
 
-  const load = () => itinerariesService.bookings.list(itineraryId).then(setBookings).catch(() => {}).finally(() => setLoading(false))
+  const load = () => {
+    setLoading(true)
+    itinerariesService.bookings.list(itineraryId)
+      .then(setBookings)
+      .catch((err) => {
+        alert(err?.response?.data?.message || "Failed to load linked bookings.")
+      })
+      .finally(() => setLoading(false))
+  }
+  
   useEffect(() => { load() }, [itineraryId])
 
   const addBooking = async (e) => {
     e.preventDefault()
-    try { await itinerariesService.bookings.add(itineraryId, { bookingId }); setBookingId(''); load() }
-    catch (err) { alert(err?.response?.data?.message || err.message) }
+    try { 
+      await itinerariesService.bookings.add(itineraryId, { bookingId })
+      setBookingId('')
+      load() 
+    } catch (err) { 
+      alert(err?.response?.data?.message || err.message) 
+    }
   }
 
   const removeBooking = async (bId) => {
-    try { await itinerariesService.bookings.remove(itineraryId, bId); load() }
-    catch (err) { alert(err?.response?.data?.message || err.message) }
+    try { 
+      await itinerariesService.bookings.remove(itineraryId, bId)
+      load() 
+    } catch (err) { 
+      alert(err?.response?.data?.message || err.message) 
+    }
   }
 
   return (

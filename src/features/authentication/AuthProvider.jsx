@@ -23,7 +23,6 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     const res = await authService.login(credentials)
-    // API returns { message, data: { userId, name, email, role, token } }
     const payload = res.data ?? res
     const user = {
       id: payload.userId ?? payload.id,

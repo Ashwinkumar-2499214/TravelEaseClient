@@ -3,7 +3,15 @@ import api from '../../../utils/api'
 const unwrap = (r) => r.data?.data ?? r.data
 
 const partnersService = {
-  list: (params = {}) => api.get('/partners', { params: { pageNumber: 1, pageSize: 50, ...params } }).then(unwrap),
+  list: (params = {}) => api.get('/partners', { 
+    params: { 
+      pageNumber: 1, 
+      pageSize: 50, 
+      SearchTerm: '', 
+      ...params 
+    } 
+  }).then(unwrap),
+  
   create: (payload) => api.post('/partners', payload).then(unwrap),
   get: (id) => api.get(`/partners/${id}`).then(unwrap),
   update: (id, payload) => api.put(`/partners/${id}`, payload).then(unwrap),

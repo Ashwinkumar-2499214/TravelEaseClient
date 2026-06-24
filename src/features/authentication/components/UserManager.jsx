@@ -47,14 +47,21 @@ export default function UserManager() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
+      const role = Number(form.role) || 1
       if (editUser) {
-        await authService.updateUser(editUser.userId, { name: form.name, email: form.email, phone: form.phone, role: form.role })
+        await authService.updateUser(editUser.userId, { name: form.name, email: form.email, phone: form.phone, role })
         const currentRole = ROLES.find(r => r.label === editUser.role)?.value
-        if (Number(form.role) !== currentRole) {
-          await authService.updateRoles(editUser.userId, Number(form.role))
+        if (role !== currentRole) {
+          await authService.updateRoles(editUser.userId, role)
         }
       } else {
-        await authService.registerUser({ ...form, role: Number(form.role) })
+        await authService.registerUser({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          password: form.password,
+          role,
+        })
       }
       setShowModal(false)
       load(search)
@@ -147,8 +154,8 @@ export default function UserManager() {
                 )}
                 <div className="mb-2">
                   <label className="form-label">Role</label>
-                  <select className="form-select" value={form.role} onChange={e => setForm(p => ({ ...p, role: Number(e.target.value) }))}>
-                    {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  <select className="form-select" value={String(form.role)} onChange={e => setForm(p => ({ ...p, role: Number(e.target.value) }))}>
+                    {ROLES.map(r => <option key={r.value} value={String(r.value)}>{r.label}</option>)}
                   </select>
                 </div>
               </div>

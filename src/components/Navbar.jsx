@@ -31,7 +31,7 @@ export default function Navbar() {
                 <button className="btn btn-outline-light btn-sm" onClick={handleLogout}>Logout</button>
               </>
             ) : (
-              <Link className="btn btn-outline-light btn-sm" to="/login">Login</Link>
+              <Link className="btn btn-outline-light btn-sm" to="/register">Register</Link>
             )}
           </div>
         </div>

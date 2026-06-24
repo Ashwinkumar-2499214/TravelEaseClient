@@ -10,7 +10,6 @@ export default function LoginForm() {
   const { login, currentUser } = useAuth()
   const navigate = useNavigate()
 
-  // Redirect once currentUser is populated after login
   useEffect(() => {
     if (currentUser) {
       navigate('/dashboard/overview', { replace: true })
@@ -23,7 +22,6 @@ export default function LoginForm() {
     setError(null)
     try {
       await login({ email, password })
-      // navigation handled by the useEffect above
     } catch (err) {
       setError(err?.response?.data?.message || err.message || 'Login failed')
     } finally {

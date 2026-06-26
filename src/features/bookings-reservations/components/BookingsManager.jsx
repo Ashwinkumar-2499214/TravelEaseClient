@@ -3,7 +3,7 @@ import bookingsService from '../services/bookingsService'
 import { formatDate } from '../../../utils/date'
 
 const STATUSES = ['Pending', 'Confirmed', 'Cancelled', 'Completed']
-const EMPTY = { travelerId: '', inventoryId: '', startDate: '', endDate: '', notes: '' }
+const EMPTY = { userId: '', partnerId: '', inventoryId: '', itemType: 'Hotel', bookingDate: '', amount: '', status: 1 }
 
 export default function BookingsManager({ agentMode = false }) {
   const [bookings, setBookings] = useState([])
@@ -24,14 +24,31 @@ export default function BookingsManager({ agentMode = false }) {
   const openCreate = () => { setEditBooking(null); setForm(EMPTY); setShowModal(true) }
   const openEdit = (b) => {
     setEditBooking(b)
-    setForm({ travelerId: b.travelerId || '', inventoryId: b.inventoryId || '', startDate: b.startDate?.slice(0, 10) || '', endDate: b.endDate?.slice(0, 10) || '', notes: b.notes || '' })
+    setForm({ 
+      userId: b.userId || '', 
+      partnerId: b.partnerId || '', 
+      inventoryId: b.inventoryId || '', 
+      itemType: b.itemType || 'Hotel', 
+      bookingDate: b.bookingDate?.slice(0, 16) || '', 
+      amount: b.amount || '', 
+      status: b.status || 1 
+    })
     setShowModal(true)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      editBooking ? await bookingsService.update(editBooking.id, form) : await bookingsService.create(form)
+      const payload = {
+        userId: Number(form.userId),
+        partnerId: Number(form.partnerId), 
+        inventoryId: Number(form.inventoryId),
+        itemType: form.itemType,
+        bookingDate: new Date(form.bookingDate).toISOString(),
+        status: Number(form.status),
+        amount: Number(form.amount)
+      }
+      editBooking ? await bookingsService.update(editBooking.id, payload) : await bookingsService.create(payload)
       setShowModal(false); load()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
@@ -84,23 +101,23 @@ export default function BookingsManager({ agentMode = false }) {
           <tbody>
             {bookings.map(b => (
               <React.Fragment key={b.id}>
-                <tr className="border-secondary">
-                  <td className="text-white font-monospace border-secondary">
+                <tr className="border-secondary bg-dark">
+                  <td className="text-muted font-monospace border-secondary bg-darker">
                     <button className="btn btn-link btn-sm p-0 me-2 text-info text-decoration-none" onClick={() => setExpandedId(expandedId === b.id ? null : b.id)}>
                       <i className={`fa-solid ${expandedId === b.id ? 'fa-chevron-down' : 'fa-chevron-right'}`} />
                     </button>
-                    {b.reference || b.id}
+                    <span className="text-secondary">{b.reference || b.id}</span>
                   </td>
-                  <td className="text-light font-monospace border-secondary">{formatDate(b.startDate)}</td>
-                  <td className="text-light font-monospace border-secondary">{formatDate(b.endDate)}</td>
-                  <td className="border-secondary">{statusBadge(b.status)}</td>
-                  <td className="border-secondary">
-                    <select className="form-select form-select-sm bg-dark text-light border-secondary rounded-0" style={{ width: 130 }} value={b.status}
+                  <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(b.startDate)}</td>
+                  <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(b.endDate)}</td>
+                  <td className="border-secondary bg-darker">{statusBadge(b.status)}</td>
+                  <td className="border-secondary bg-darker">
+                    <select className="form-select form-select-sm bg-dark text-secondary border-secondary rounded-0" style={{ width: 130 }} value={b.status}
                       onChange={e => handleStatus(b.id, e.target.value)}>
-                      {STATUSES.map(s => <option key={s} value={s} className="bg-dark text-light">{s}</option>)}
+                      {STATUSES.map(s => <option key={s} value={s} className="bg-dark text-secondary">{s}</option>)}
                     </select>
                   </td>
-                  <td className="border-secondary">
+                  <td className="border-secondary bg-darker">
                     <div className="btn-group btn-group-sm">
                       <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(b)}><i className="fa-solid fa-pen" /></button>
                       <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(b.id)}><i className="fa-solid fa-trash" /></button>
@@ -123,40 +140,65 @@ export default function BookingsManager({ agentMode = false }) {
       </div>
 
       {showModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
+        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
           <div className="modal-dialog">
-            <form className="modal-content" onSubmit={handleSubmit}>
-              <div className="modal-header">
-                <h5 className="modal-title">{editBooking ? 'Edit Booking' : 'New Booking'}</h5>
-                <button type="button" className="btn-close" onClick={() => setShowModal(false)} />
+            <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleSubmit}>
+              <div className="modal-header bg-dark border-secondary">
+                <div>
+                  <h5 className="text-white font-monospace text-uppercase mb-1">{editBooking ? 'Edit Booking' : 'New Booking'}</h5>
+                  <small className="text-light font-monospace">Reservation Management System</small>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+                  <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)} />
+                </div>
               </div>
-              <div className="modal-body">
-                {agentMode && (
-                  <div className="mb-2">
-                    <label className="form-label">Traveler ID</label>
-                    <input className="form-control" value={form.travelerId} onChange={e => setForm(p => ({ ...p, travelerId: e.target.value }))} />
+              <div className="modal-body bg-dark">
+                <div className="d-flex flex-column gap-3">
+                  {agentMode && (
+                    <div>
+                      <label className="form-label text-white font-monospace text-uppercase small">User ID</label>
+                      <input type="number" className="form-control bg-dark text-white border-secondary rounded-0" value={form.userId} onChange={e => setForm(p => ({ ...p, userId: e.target.value }))} required />
+                    </div>
+                  )}
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Partner ID</label>
+                    <input type="number" className="form-control bg-dark text-white border-secondary rounded-0" value={form.partnerId} onChange={e => setForm(p => ({ ...p, partnerId: e.target.value }))} required />
                   </div>
-                )}
-                <div className="mb-2">
-                  <label className="form-label">Inventory ID</label>
-                  <input className="form-control" value={form.inventoryId} onChange={e => setForm(p => ({ ...p, inventoryId: e.target.value }))} />
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">Start Date</label>
-                  <input type="date" className="form-control" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} required />
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">End Date</label>
-                  <input type="date" className="form-control" value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} required />
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">Notes</label>
-                  <textarea className="form-control" rows={2} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Inventory ID</label>
+                    <input type="number" className="form-control bg-dark text-white border-secondary rounded-0" value={form.inventoryId} onChange={e => setForm(p => ({ ...p, inventoryId: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Item Type</label>
+                    <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.itemType} onChange={e => setForm(p => ({ ...p, itemType: e.target.value }))} required>
+                      <option value="Hotel" className="bg-dark text-white">Hotel</option>
+                      <option value="Flight" className="bg-dark text-white">Flight</option>
+                      <option value="Transport" className="bg-dark text-white">Transport</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Booking Date & Time</label>
+                    <input type="datetime-local" className="form-control bg-dark text-white border-secondary rounded-0" value={form.bookingDate} onChange={e => setForm(p => ({ ...p, bookingDate: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Amount</label>
+                    <input type="number" step="0.01" className="form-control bg-dark text-white border-secondary rounded-0" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Status</label>
+                    <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.status} onChange={e => setForm(p => ({ ...p, status: Number(e.target.value) }))}>
+                      <option value={1} className="bg-dark text-white">Active</option>
+                      <option value={0} className="bg-dark text-white">Inactive</option>
+                    </select>
+                  </div>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save</button>
+              <div className="modal-footer bg-dark border-secondary">
+                <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-outline-info rounded-0 font-monospace text-uppercase">
+                  <i className="fa-solid fa-save me-2"></i>Save Booking
+                </button>
               </div>
             </form>
           </div>
@@ -215,14 +257,14 @@ function ReservationsRow({ bookingId }) {
                 </thead>
                 <tbody>
                   {reservations.map(r => (
-                    <tr key={r.id} className="border-secondary">
-                      <td className="text-light font-monospace border-secondary">{r.id}</td>
-                      <td className="text-light font-monospace border-secondary">{r.seatNumber || '-'}</td>
-                      <td className="border-secondary"><span className="badge bg-info text-dark font-monospace">{r.status}</span></td>
-                      <td className="border-secondary">
-                        <select className="form-select form-select-sm bg-dark text-light border-secondary rounded-0" style={{ width: 130 }} value={r.status}
+                    <tr key={r.id} className="border-secondary bg-dark">
+                      <td className="text-secondary font-monospace border-secondary bg-darker">{r.id}</td>
+                      <td className="text-secondary font-monospace border-secondary bg-darker">{r.seatNumber || '-'}</td>
+                      <td className="border-secondary bg-darker"><span className="badge bg-info text-dark font-monospace">{r.status}</span></td>
+                      <td className="border-secondary bg-darker">
+                        <select className="form-select form-select-sm bg-dark text-secondary border-secondary rounded-0" style={{ width: 130 }} value={r.status}
                           onChange={e => patchStatus(r.id, e.target.value)}>
-                          {['Pending', 'Confirmed', 'Cancelled'].map(s => <option key={s} className="bg-dark text-light">{s}</option>)}
+                          {['Pending', 'Confirmed', 'Cancelled'].map(s => <option key={s} className="bg-dark text-secondary">{s}</option>)}
                         </select>
                       </td>
                     </tr>
@@ -243,9 +285,9 @@ function ReservationsRow({ bookingId }) {
                 <i className="fa-solid fa-plus me-2" />Add Reservation
               </button>
             ) : (
-              <form onSubmit={addRes} className="d-flex gap-2 flex-wrap mt-2">
-                <input className="form-control form-control-sm bg-dark text-light border-secondary rounded-0" style={{ width: 160 }} placeholder="Seat Number" value={form.seatNumber} onChange={e => setForm(p => ({ ...p, seatNumber: e.target.value }))} />
-                <input className="form-control form-control-sm bg-dark text-light border-secondary rounded-0" style={{ width: 200 }} placeholder="Special Requests" value={form.specialRequests} onChange={e => setForm(p => ({ ...p, specialRequests: e.target.value }))} />
+              <form onSubmit={addRes} className="d-flex gap-2 flex-wrap mt-2 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
+                <input className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" style={{ width: 160 }} placeholder="Seat Number" value={form.seatNumber} onChange={e => setForm(p => ({ ...p, seatNumber: e.target.value }))} />
+                <input className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" style={{ width: 200 }} placeholder="Special Requests" value={form.specialRequests} onChange={e => setForm(p => ({ ...p, specialRequests: e.target.value }))} />
                 <button type="submit" className="btn btn-info btn-sm rounded-0 font-monospace">Add</button>
                 <button type="button" className="btn btn-secondary btn-sm rounded-0 font-monospace" onClick={() => setShowAdd(false)}>Cancel</button>
               </form>

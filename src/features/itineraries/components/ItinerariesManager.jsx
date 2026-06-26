@@ -157,34 +157,44 @@ export default function ItinerariesManager() {
       </div>
 
       {showModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
+        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
           <div className="modal-dialog">
-            <form className="modal-content" onSubmit={handleSubmit}>
-              <div className="modal-header">
-                <h5 className="modal-title">{editItin ? 'Edit Itinerary' : 'New Itinerary'}</h5>
-                <button type="button" className="btn-close" onClick={() => setShowModal(false)} />
-              </div>
-              <div className="modal-body">
-                <div className="mb-2">
-                  <label className="form-label">Title</label>
-                  <input className="form-control" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
+            <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleSubmit}>
+              <div className="modal-header bg-dark border-secondary">
+                <div>
+                  <h5 className="text-white font-monospace text-uppercase mb-1">{editItin ? 'Edit Itinerary' : 'New Itinerary'}</h5>
+                  <small className="text-light font-monospace">Travel Planning System</small>
                 </div>
-                <div className="mb-2">
-                  <label className="form-label">Description</label>
-                  <textarea className="form-control" rows={2} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">Start Date</label>
-                  <input type="date" className="form-control" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} required />
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">End Date</label>
-                  <input type="date" className="form-control" value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} required />
+                <div className="d-flex align-items-center gap-2">
+                  <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+                  <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)} />
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save</button>
+              <div className="modal-body bg-dark">
+                <div className="d-flex flex-column gap-3">
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Title</label>
+                    <input className="form-control bg-dark text-white border-secondary rounded-0" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Description</label>
+                    <textarea className="form-control bg-dark text-white border-secondary rounded-0" rows={2} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Start Date</label>
+                    <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">End Date</label>
+                    <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} required />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer bg-dark border-secondary">
+                <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-outline-info rounded-0 font-monospace text-uppercase">
+                  <i className="fa-solid fa-save me-2"></i>Save Itinerary
+                </button>
               </div>
             </form>
           </div>
@@ -192,20 +202,30 @@ export default function ItinerariesManager() {
       )}
 
       {shareModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
+        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
           <div className="modal-dialog modal-sm">
-            <form className="modal-content" onSubmit={handleShare}>
-              <div className="modal-header">
-                <h5 className="modal-title">Share Itinerary</h5>
-                <button type="button" className="btn-close" onClick={() => setShareModal(null)} />
+            <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleShare}>
+              <div className="modal-header bg-dark border-secondary">
+                <div>
+                  <h5 className="text-white font-monospace text-uppercase mb-1">Share Itinerary</h5>
+                  <small className="text-light font-monospace">Collaboration System</small>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+                  <button type="button" className="btn-close btn-close-white" onClick={() => setShareModal(null)} />
+                </div>
               </div>
-              <div className="modal-body">
-                <label className="form-label">Recipient Email</label>
-                <input className="form-control" type="email" value={shareEmail} onChange={e => setShareEmail(e.target.value)} required />
+              <div className="modal-body bg-dark">
+                <div>
+                  <label className="form-label text-white font-monospace text-uppercase small">Recipient Email</label>
+                  <input className="form-control bg-dark text-white border-secondary rounded-0" type="email" value={shareEmail} onChange={e => setShareEmail(e.target.value)} required />
+                </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShareModal(null)}>Cancel</button>
-                <button type="submit" className="btn btn-info">Share</button>
+              <div className="modal-footer bg-dark border-secondary">
+                <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setShareModal(null)}>Cancel</button>
+                <button type="submit" className="btn btn-outline-info rounded-0 font-monospace text-uppercase">
+                  <i className="fa-solid fa-share-nodes me-2"></i>Share
+                </button>
               </div>
             </form>
           </div>
@@ -267,9 +287,9 @@ function ItineraryBookingsRow({ itineraryId }) {
               ))}
               {bookings.length === 0 && <li className="list-group-item text-muted">No linked bookings.</li>}
             </ul>
-            <form onSubmit={addBooking} className="d-flex gap-2">
-              <input className="form-control form-control-sm" style={{ width: 220 }} placeholder="Booking ID to link" value={bookingId} onChange={e => setBookingId(e.target.value)} required />
-              <button type="submit" className="btn btn-sm btn-success">Link</button>
+            <form onSubmit={addBooking} className="d-flex gap-2 mt-2 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
+              <input className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" style={{ width: 220 }} placeholder="Booking ID to link" value={bookingId} onChange={e => setBookingId(e.target.value)} required />
+              <button type="submit" className="btn btn-info btn-sm rounded-0 font-monospace">Link</button>
             </form>
           </>
         )}

@@ -78,30 +78,70 @@ function TrendsPanel() {
   return (
     <div className="row">
       <div className="col-md-6">
-        <div className="card">
-          <div className="card-header">Spend Per Traveler</div>
+        <div className="card bg-secondary bg-opacity-10 border-secondary rounded-0">
+          <div className="card-header bg-dark border-secondary">
+            <h6 className="text-white font-monospace text-uppercase mb-0">Spend Per Traveler</h6>
+          </div>
           <div className="card-body p-0">
-            <table className="table table-sm mb-0">
-              <thead className="table-secondary"><tr><th>Traveler</th><th>Spend</th></tr></thead>
-              <tbody>
-                {spendData.map((s, i) => <tr key={i}><td>{s.traveler || s.travelerId}</td><td>${s.spend || s.amount}</td></tr>)}
-                {spendData.length === 0 && <tr><td colSpan={2} className="text-center text-muted">No data.</td></tr>}
-              </tbody>
-            </table>
+            <div className="table-responsive">
+              <table className="table table-dark table-sm mb-0 rounded-0">
+                <thead className="bg-info text-dark">
+                  <tr>
+                    <th className="font-monospace text-uppercase small border-secondary">Traveler</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Spend</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {spendData.map((s, i) => (
+                    <tr key={i} className="border-secondary bg-dark">
+                      <td className="text-secondary font-monospace border-secondary bg-darker">{s.traveler || s.travelerId}</td>
+                      <td className="text-secondary font-monospace border-secondary bg-darker">${s.spend || s.amount}</td>
+                    </tr>
+                  ))}
+                  {spendData.length === 0 && (
+                    <tr>
+                      <td colSpan={2} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                        <span className="font-monospace">No data available.</span>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
       <div className="col-md-6">
-        <div className="card">
-          <div className="card-header">Top Destinations</div>
+        <div className="card bg-secondary bg-opacity-10 border-secondary rounded-0">
+          <div className="card-header bg-dark border-secondary">
+            <h6 className="text-white font-monospace text-uppercase mb-0">Top Destinations</h6>
+          </div>
           <div className="card-body p-0">
-            <table className="table table-sm mb-0">
-              <thead className="table-secondary"><tr><th>Destination</th><th>Count</th></tr></thead>
-              <tbody>
-                {destData.map((d, i) => <tr key={i}><td>{d.destination || d.name}</td><td>{d.count}</td></tr>)}
-                {destData.length === 0 && <tr><td colSpan={2} className="text-center text-muted">No data.</td></tr>}
-              </tbody>
-            </table>
+            <div className="table-responsive">
+              <table className="table table-dark table-sm mb-0 rounded-0">
+                <thead className="bg-info text-dark">
+                  <tr>
+                    <th className="font-monospace text-uppercase small border-secondary">Destination</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {destData.map((d, i) => (
+                    <tr key={i} className="border-secondary bg-dark">
+                      <td className="text-secondary font-monospace border-secondary bg-darker">{d.destination || d.name}</td>
+                      <td className="text-secondary font-monospace border-secondary bg-darker">{d.count}</td>
+                    </tr>
+                  ))}
+                  {destData.length === 0 && (
+                    <tr>
+                      <td colSpan={2} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                        <span className="font-monospace">No data available.</span>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -149,31 +189,51 @@ function KpiReportsPanel() {
 
   return (
     <div>
-      <div className="d-flex justify-content-end mb-2">
-        <button className="btn btn-sm btn-primary" onClick={() => setShowAdd(!showAdd)}><i className="fa-solid fa-plus me-1" />New KPI Report</button>
+      <div className="d-flex justify-content-end mb-3">
+        <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={() => setShowAdd(!showAdd)}>
+          <i className="fa-solid fa-plus me-2" />New KPI Report
+        </button>
       </div>
       {showAdd && (
-        <form onSubmit={handleAdd} className="d-flex gap-2 mb-3">
-          <input className="form-control form-control-sm" placeholder="Title" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
-          <input className="form-control form-control-sm" placeholder="Period (e.g. Q1 2025)" value={form.period} onChange={e => setForm(p => ({ ...p, period: e.target.value }))} />
-          <button type="submit" className="btn btn-sm btn-success">Create</button>
-          <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowAdd(false)}>Cancel</button>
+        <form onSubmit={handleAdd} className="d-flex gap-2 mb-4 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
+          <input className="form-control form-control-sm bg-dark text-light border-secondary rounded-0" placeholder="Title" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
+          <input className="form-control form-control-sm bg-dark text-light border-secondary rounded-0" placeholder="Period (e.g. Q1 2025)" value={form.period} onChange={e => setForm(p => ({ ...p, period: e.target.value }))} />
+          <button type="submit" className="btn btn-info btn-sm rounded-0 font-monospace">Create</button>
+          <button type="button" className="btn btn-secondary btn-sm rounded-0 font-monospace" onClick={() => setShowAdd(false)}>Cancel</button>
         </form>
       )}
       <div className="table-responsive">
-        <table className="table table-sm table-bordered align-middle">
-          <thead className="table-dark"><tr><th>Title</th><th>Period</th><th>Created</th><th>Actions</th></tr></thead>
+        <table className="table table-dark table-hover align-middle rounded-0 border-secondary">
+          <thead className="bg-info text-dark">
+            <tr>
+              <th className="font-monospace text-uppercase small border-secondary">Title</th>
+              <th className="font-monospace text-uppercase small border-secondary">Period</th>
+              <th className="font-monospace text-uppercase small border-secondary">Created</th>
+              <th className="font-monospace text-uppercase small border-secondary">Actions</th>
+            </tr>
+          </thead>
           <tbody>
             {reports.map(r => (
-              <tr key={r.id}>
-                <td>{r.title}</td><td>{r.period}</td><td>{formatDate(r.createdAt)}</td>
-                <td>
-                  <button className="btn btn-sm btn-outline-secondary me-1" onClick={() => handleDownload(r.id)}><i className="fa-solid fa-download" /></button>
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(r.id)}><i className="fa-solid fa-trash" /></button>
+              <tr key={r.id} className="border-secondary bg-dark">
+                <td className="text-secondary font-monospace border-secondary bg-darker">{r.title}</td>
+                <td className="text-secondary font-monospace border-secondary bg-darker">{r.period}</td>
+                <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(r.createdAt)}</td>
+                <td className="border-secondary bg-darker">
+                  <div className="btn-group btn-group-sm">
+                    <button className="btn btn-outline-info rounded-0" onClick={() => handleDownload(r.id)}><i className="fa-solid fa-download" /></button>
+                    <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(r.id)}><i className="fa-solid fa-trash" /></button>
+                  </div>
                 </td>
               </tr>
             ))}
-            {reports.length === 0 && <tr><td colSpan={4} className="text-center text-muted">No KPI reports.</td></tr>}
+            {reports.length === 0 && (
+              <tr>
+                <td colSpan={4} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                  <i className="fa-solid fa-chart-line me-2"></i>
+                  <span className="font-monospace">No KPI reports generated.</span>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

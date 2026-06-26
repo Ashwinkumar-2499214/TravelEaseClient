@@ -94,23 +94,23 @@ export default function InvoicesManager() {
           <tbody>
             {invoices.map(inv => (
               <React.Fragment key={inv.id}>
-                <tr className="border-secondary">
-                  <td className="text-white font-monospace border-secondary">
+                <tr className="border-secondary bg-dark">
+                  <td className="text-muted font-monospace border-secondary bg-darker">
                     <button className="btn btn-link btn-sm p-0 me-2 text-info text-decoration-none" onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}>
                       <i className={`fa-solid ${expandedId === inv.id ? 'fa-chevron-down' : 'fa-chevron-right'}`} />
                     </button>
-                    {inv.number || inv.id}
+                    <span className="text-secondary">{inv.number || inv.id}</span>
                   </td>
-                  <td className="text-light font-monospace border-secondary">${inv.amount}</td>
-                  <td className="text-light font-monospace border-secondary">{formatDate(inv.dueDate)}</td>
-                  <td className="border-secondary">{statusBadge(inv.status)}</td>
-                  <td className="border-secondary">
-                    <select className="form-select form-select-sm bg-dark text-light border-secondary rounded-0" style={{ width: 130 }} value={inv.status}
+                  <td className="text-secondary font-monospace border-secondary bg-darker">${inv.amount}</td>
+                  <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(inv.dueDate)}</td>
+                  <td className="border-secondary bg-darker">{statusBadge(inv.status)}</td>
+                  <td className="border-secondary bg-darker">
+                    <select className="form-select form-select-sm bg-dark text-secondary border-secondary rounded-0" style={{ width: 130 }} value={inv.status}
                       onChange={e => handleStatus(inv.id, e.target.value)}>
-                      {STATUSES.map(s => <option key={s} className="bg-dark text-light">{s}</option>)}
+                      {STATUSES.map(s => <option key={s} className="bg-dark text-secondary">{s}</option>)}
                     </select>
                   </td>
-                  <td className="border-secondary">
+                  <td className="border-secondary bg-darker">
                     <div className="btn-group btn-group-sm">
                       <button className="btn btn-outline-warning rounded-0" title="Adjustment" onClick={() => { setAdjModal(inv.id); setAdjForm({ amount: '', reason: '' }) }}><i className="fa-solid fa-sliders" /></button>
                       <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(inv)}><i className="fa-solid fa-pen" /></button>
@@ -134,22 +134,44 @@ export default function InvoicesManager() {
       </div>
 
       {showModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
+        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
           <div className="modal-dialog">
-            <form className="modal-content" onSubmit={handleSubmit}>
-              <div className="modal-header">
-                <h5 className="modal-title">{editInv ? 'Edit Invoice' : 'New Invoice'}</h5>
-                <button type="button" className="btn-close" onClick={() => setShowModal(false)} />
+            <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleSubmit}>
+              <div className="modal-header bg-dark border-secondary">
+                <div>
+                  <h5 className="text-white font-monospace text-uppercase mb-1">{editInv ? 'Edit Invoice' : 'New Invoice'}</h5>
+                  <small className="text-light font-monospace">Financial Management System</small>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+                  <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)} />
+                </div>
               </div>
-              <div className="modal-body">
-                <div className="mb-2"><label className="form-label">Booking ID</label><input className="form-control" value={form.bookingId} onChange={e => setForm(p => ({ ...p, bookingId: e.target.value }))} /></div>
-                <div className="mb-2"><label className="form-label">Amount</label><input type="number" step="0.01" className="form-control" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} required /></div>
-                <div className="mb-2"><label className="form-label">Due Date</label><input type="date" className="form-control" value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} required /></div>
-                <div className="mb-2"><label className="form-label">Description</label><textarea className="form-control" rows={2} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} /></div>
+              <div className="modal-body bg-dark">
+                <div className="d-flex flex-column gap-3">
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Booking ID</label>
+                    <input className="form-control bg-dark text-white border-secondary rounded-0" value={form.bookingId} onChange={e => setForm(p => ({ ...p, bookingId: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Amount</label>
+                    <input type="number" step="0.01" className="form-control bg-dark text-white border-secondary rounded-0" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Due Date</label>
+                    <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Description</label>
+                    <textarea className="form-control bg-dark text-white border-secondary rounded-0" rows={2} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+                  </div>
+                </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save</button>
+              <div className="modal-footer bg-dark border-secondary">
+                <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-outline-info rounded-0 font-monospace text-uppercase">
+                  <i className="fa-solid fa-save me-2"></i>Save Invoice
+                </button>
               </div>
             </form>
           </div>
@@ -157,20 +179,36 @@ export default function InvoicesManager() {
       )}
 
       {adjModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
+        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
           <div className="modal-dialog modal-sm">
-            <form className="modal-content" onSubmit={handleAdjustment}>
-              <div className="modal-header">
-                <h5 className="modal-title">Apply Adjustment</h5>
-                <button type="button" className="btn-close" onClick={() => setAdjModal(null)} />
+            <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleAdjustment}>
+              <div className="modal-header bg-dark border-secondary">
+                <div>
+                  <h5 className="text-white font-monospace text-uppercase mb-1">Apply Adjustment</h5>
+                  <small className="text-light font-monospace">Financial Adjustment System</small>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <div className="spinner-grow spinner-grow-sm text-warning" role="status"></div>
+                  <button type="button" className="btn-close btn-close-white" onClick={() => setAdjModal(null)} />
+                </div>
               </div>
-              <div className="modal-body">
-                <div className="mb-2"><label className="form-label">Amount</label><input type="number" step="0.01" className="form-control" value={adjForm.amount} onChange={e => setAdjForm(p => ({ ...p, amount: e.target.value }))} required /></div>
-                <div className="mb-2"><label className="form-label">Reason</label><input className="form-control" value={adjForm.reason} onChange={e => setAdjForm(p => ({ ...p, reason: e.target.value }))} required /></div>
+              <div className="modal-body bg-dark">
+                <div className="d-flex flex-column gap-3">
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Amount</label>
+                    <input type="number" step="0.01" className="form-control bg-dark text-white border-secondary rounded-0" value={adjForm.amount} onChange={e => setAdjForm(p => ({ ...p, amount: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Reason</label>
+                    <input className="form-control bg-dark text-white border-secondary rounded-0" value={adjForm.reason} onChange={e => setAdjForm(p => ({ ...p, reason: e.target.value }))} required />
+                  </div>
+                </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setAdjModal(null)}>Cancel</button>
-                <button type="submit" className="btn btn-warning">Apply</button>
+              <div className="modal-footer bg-dark border-secondary">
+                <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setAdjModal(null)}>Cancel</button>
+                <button type="submit" className="btn btn-outline-warning rounded-0 font-monospace text-uppercase">
+                  <i className="fa-solid fa-sliders me-2"></i>Apply
+                </button>
               </div>
             </form>
           </div>
@@ -202,34 +240,64 @@ function InvoicePaymentsRow({ invoiceId }) {
   }
 
   return (
-    <tr className="table-light">
-      <td colSpan={6} className="ps-5">
-        <strong className="d-block mb-2">Payments</strong>
-        {loading ? <div className="spinner-border spinner-border-sm" /> : (
+    <tr className="bg-secondary bg-opacity-25 border-secondary">
+      <td colSpan={6} className="ps-5 border-secondary">
+        <div className="d-flex align-items-center mb-3">
+          <i className="fa-solid fa-credit-card text-info me-2"></i>
+          <strong className="text-white font-monospace text-uppercase">Payments</strong>
+          <div className="ms-auto spinner-grow spinner-grow-sm text-info" role="status"></div>
+        </div>
+        {loading ? (
+          <div className="d-flex align-items-center text-light font-monospace">
+            <div className="spinner-border spinner-border-sm me-2" />
+            <span>Loading payment data...</span>
+          </div>
+        ) : (
           <>
-            <table className="table table-sm table-bordered mb-2">
-              <thead className="table-secondary"><tr><th>ID</th><th>Amount</th><th>Method</th><th>Status</th><th>Refund</th></tr></thead>
-              <tbody>
-                {payments.map(p => (
-                  <tr key={p.id}>
-                    <td>{p.id}</td><td>${p.amount}</td><td>{p.method}</td>
-                    <td><span className="badge bg-info text-dark">{p.status}</span></td>
-                    <td><button className="btn btn-sm btn-outline-danger" onClick={() => handleRefund(p.id)}>Refund</button></td>
+            <div className="table-responsive">
+              <table className="table table-dark table-sm rounded-0 border-secondary">
+                <thead className="bg-info text-dark">
+                  <tr>
+                    <th className="font-monospace text-uppercase small border-secondary">ID</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Amount</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Method</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Status</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Refund</th>
                   </tr>
-                ))}
-                {payments.length === 0 && <tr><td colSpan={5} className="text-muted text-center">No payments.</td></tr>}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {payments.map(p => (
+                    <tr key={p.id} className="border-secondary bg-dark">
+                      <td className="text-secondary font-monospace border-secondary bg-darker">{p.id}</td>
+                      <td className="text-secondary font-monospace border-secondary bg-darker">${p.amount}</td>
+                      <td className="text-secondary font-monospace border-secondary bg-darker">{p.method}</td>
+                      <td className="border-secondary bg-darker"><span className="badge bg-info text-dark font-monospace">{p.status}</span></td>
+                      <td className="border-secondary bg-darker"><button className="btn btn-outline-danger btn-sm rounded-0" onClick={() => handleRefund(p.id)}>Refund</button></td>
+                    </tr>
+                  ))}
+                  {payments.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                        <i className="fa-solid fa-wallet me-2"></i>
+                        <span className="font-monospace">No payments on record.</span>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
             {!showAdd ? (
-              <button className="btn btn-sm btn-outline-success" onClick={() => setShowAdd(true)}><i className="fa-solid fa-plus me-1" />Record Payment</button>
+              <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase mt-2" onClick={() => setShowAdd(true)}>
+                <i className="fa-solid fa-plus me-2" />Record Payment
+              </button>
             ) : (
-              <form onSubmit={addPayment} className="d-flex gap-2 flex-wrap">
-                <input type="number" step="0.01" className="form-control form-control-sm" style={{ width: 130 }} placeholder="Amount" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} required />
-                <select className="form-select form-select-sm" style={{ width: 130 }} value={form.method} onChange={e => setForm(p => ({ ...p, method: e.target.value }))}>
-                  {['Card', 'BankTransfer', 'Cash', 'Online'].map(m => <option key={m}>{m}</option>)}
+              <form onSubmit={addPayment} className="d-flex gap-2 flex-wrap mt-2 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
+                <input type="number" step="0.01" className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" style={{ width: 130 }} placeholder="Amount" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} required />
+                <select className="form-select form-select-sm bg-dark text-white border-secondary rounded-0" style={{ width: 130 }} value={form.method} onChange={e => setForm(p => ({ ...p, method: e.target.value }))}>
+                  {['Card', 'BankTransfer', 'Cash', 'Online'].map(m => <option key={m} className="bg-dark text-white">{m}</option>)}
                 </select>
-                <button type="submit" className="btn btn-sm btn-success">Add</button>
-                <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowAdd(false)}>Cancel</button>
+                <button type="submit" className="btn btn-info btn-sm rounded-0 font-monospace">Add</button>
+                <button type="button" className="btn btn-secondary btn-sm rounded-0 font-monospace" onClick={() => setShowAdd(false)}>Cancel</button>
               </form>
             )}
           </>

@@ -69,30 +69,40 @@ export default function InventorySearch() {
       </div>
 
       {bookingItem && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
+        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
           <div className="modal-dialog">
-            <form className="modal-content" onSubmit={handleBook}>
-              <div className="modal-header">
-                <h5 className="modal-title">Book: {bookingItem.name}</h5>
-                <button type="button" className="btn-close" onClick={() => setBookingItem(null)} />
-              </div>
-              <div className="modal-body">
-                <div className="mb-2">
-                  <label className="form-label">Start Date</label>
-                  <input type="date" className="form-control" value={bookForm.startDate} onChange={e => setBookForm(p => ({ ...p, startDate: e.target.value }))} required />
+            <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleBook}>
+              <div className="modal-header bg-dark border-secondary">
+                <div>
+                  <h5 className="text-white font-monospace text-uppercase mb-1">Book: {bookingItem.name}</h5>
+                  <small className="text-light font-monospace">Inventory Reservation System</small>
                 </div>
-                <div className="mb-2">
-                  <label className="form-label">End Date</label>
-                  <input type="date" className="form-control" value={bookForm.endDate} onChange={e => setBookForm(p => ({ ...p, endDate: e.target.value }))} required />
-                </div>
-                <div className="mb-2">
-                  <label className="form-label">Notes</label>
-                  <textarea className="form-control" rows={2} value={bookForm.notes} onChange={e => setBookForm(p => ({ ...p, notes: e.target.value }))} />
+                <div className="d-flex align-items-center gap-2">
+                  <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+                  <button type="button" className="btn-close btn-close-white" onClick={() => setBookingItem(null)} />
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setBookingItem(null)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={booking}>{booking ? 'Booking...' : 'Confirm Booking'}</button>
+              <div className="modal-body bg-dark">
+                <div className="d-flex flex-column gap-3">
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Start Date</label>
+                    <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={bookForm.startDate} onChange={e => setBookForm(p => ({ ...p, startDate: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">End Date</label>
+                    <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={bookForm.endDate} onChange={e => setBookForm(p => ({ ...p, endDate: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Notes</label>
+                    <textarea className="form-control bg-dark text-white border-secondary rounded-0" rows={2} value={bookForm.notes} onChange={e => setBookForm(p => ({ ...p, notes: e.target.value }))} />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer bg-dark border-secondary">
+                <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setBookingItem(null)}>Cancel</button>
+                <button type="submit" className="btn btn-outline-info rounded-0 font-monospace text-uppercase" disabled={booking}>
+                  <i className="fa-solid fa-calendar-check me-2"></i>{booking ? 'Processing...' : 'Confirm Booking'}
+                </button>
               </div>
             </form>
           </div>

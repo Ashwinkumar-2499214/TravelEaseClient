@@ -11,11 +11,8 @@ export default function PartnersManager() {
   const [editPartner, setEditPartner] = useState(null)
   const [form, setForm] = useState(EMPTY)
   const [expandedId, setExpandedId] = useState(null)
-  
-  // 1. Set the initial search input state to 'a' as requested
   const [searchInput, setSearchInput] = useState('a')
 
-  // 2. Updated Load logic: Uses 'a' if nothing else is provided or typed
   const load = (searchVal = searchInput) => {
     setLoading(true)
     setError(null)
@@ -23,7 +20,6 @@ export default function PartnersManager() {
     const queryParams = {}
     const finalSearch = searchVal.trim()
     
-    // Fallback to 'a' if the search bar is completely cleared or empty
     queryParams.SearchTerm = finalSearch === '' ? 'a' : finalSearch
 
     partnersService.list(queryParams)
@@ -32,16 +28,13 @@ export default function PartnersManager() {
       .finally(() => setLoading(false))
   }
 
-  // Runs immediately on component mount (Sends SearchTerm=a)
   useEffect(() => { load() }, [])
 
-  // Triggered when clicking 'Search' or pressing Enter
   const handleSearchSubmit = (e) => {
     e.preventDefault()
     load(searchInput)
   }
 
-  // Triggered when clicking 'Clear' (resets back to the default 'a')
   const handleClearSearch = () => {
     setSearchInput('a')
     load('a') 
@@ -57,7 +50,8 @@ export default function PartnersManager() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      editPartner ? await partnersService.update(editPartner.id, form) : await partnersService.create(form)
+      const partnerId = editPartner ? (editPartner.id || editPartner.PartnerId || editPartner.partnerId || editPartner._id) : null
+      editPartner ? await partnersService.update(partnerId, form) : await partnersService.create(form)
       setShowModal(false); load()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
@@ -69,8 +63,9 @@ export default function PartnersManager() {
   }
 
   const toggleStatus = async (p) => {
+    const partnerId = p.id || p.PartnerId || p.partnerId || p._id
     const next = p.status === 'Active' ? 'Inactive' : 'Active'
-    try { await partnersService.patchStatus(p.id, next); load() }
+    try { await partnersService.patchStatus(partnerId, next); load() }
     catch (err) { alert(err?.response?.data?.message || err.message) }
   }
 
@@ -79,25 +74,32 @@ export default function PartnersManager() {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="mb-0">Partners Registry</h5>
-        <button className="btn btn-primary btn-sm" onClick={openCreate}><i className="fa-solid fa-plus me-1" />Add Partner</button>
+      <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
+        <div>
+          <h5 className="text-white font-monospace text-uppercase mb-1">Partners Registry</h5>
+          <small className="text-light font-monospace">Vendor Management System</small>
+        </div>
+        <div className="d-flex align-items-center gap-3">
+          <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+          <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
+            <i className="fa-solid fa-plus me-2" />Add Partner
+          </button>
+        </div>
       </div>
 
-      {/* 3. The Search Bar Form UI Container */}
-      <form onSubmit={handleSearchSubmit} className="d-flex gap-2 mb-3">
+      <form onSubmit={handleSearchSubmit} className="d-flex gap-2 mb-4 p-2 bg-secondary bg-opacity-10 border-secondary rounded-0">
         <input 
           type="text" 
-          className="form-control form-control-sm" 
+          className="form-control form-control-sm bg-dark text-light border-secondary rounded-0" 
           placeholder="Type search here..." 
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />
-        <button type="submit" className="btn btn-sm btn-outline-secondary">Search</button>
+        <button type="submit" className="btn btn-outline-info btn-sm rounded-0 font-monospace">Search</button>
         {searchInput !== 'a' && (
           <button 
             type="button" 
-            className="btn btn-sm btn-link text-secondary text-decoration-none"
+            className="btn btn-outline-secondary btn-sm rounded-0 font-monospace"
             onClick={handleClearSearch}
           >
             Clear
@@ -106,62 +108,89 @@ export default function PartnersManager() {
       </form>
 
       <div className="table-responsive">
-        <table className="table table-hover table-bordered align-middle">
-          <thead className="table-dark">
-            <tr><th>Name</th><th>Type</th><th>Contact Email</th><th>Status</th><th>Actions</th></tr>
+        <table className="table table-dark table-hover align-middle rounded-0 border-secondary">
+          <thead className="bg-info text-dark">
+            <tr>
+              <th className="font-monospace text-uppercase small border-secondary">Name</th>
+              <th className="font-monospace text-uppercase small border-secondary">Type</th>
+              <th className="font-monospace text-uppercase small border-secondary">Contact Email</th>
+              <th className="font-monospace text-uppercase small border-secondary">Status</th>
+              <th className="font-monospace text-uppercase small border-secondary">Actions</th>
+            </tr>
           </thead>
           <tbody>
             {partners.map(p => (
-              <React.Fragment key={p.id}>
-                <tr>
-                  <td>
-                    <button className="btn btn-link btn-sm p-0 me-2 text-decoration-none" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
-                      <i className={`fa-solid ${expandedId === p.id ? 'fa-chevron-down' : 'fa-chevron-right'}`} />
+              <React.Fragment key={p.id || p.PartnerId || p.partnerId || p._id}>
+                <tr className="border-secondary bg-dark">
+                  <td className="text-muted font-monospace border-secondary bg-darker">
+                    <button className="btn btn-link btn-sm p-0 me-2 text-info text-decoration-none" onClick={() => setExpandedId(expandedId === (p.id || p.PartnerId || p.partnerId || p._id) ? null : (p.id || p.PartnerId || p.partnerId || p._id))}>
+                      <i className={`fa-solid ${expandedId === (p.id || p.PartnerId || p.partnerId || p._id) ? 'fa-chevron-down' : 'fa-chevron-right'}`} />
                     </button>
-                    {p.name}
+                    <span className="text-secondary">{p.name}</span>
                   </td>
-                  <td>{p.type}</td>
-                  <td>{p.contactEmail}</td>
-                  <td><span className={`badge ${p.status === 'Active' ? 'bg-success' : 'bg-secondary'}`}>{p.status}</span></td>
-                  <td>
-                    <button className="btn btn-sm btn-outline-warning me-1" onClick={() => toggleStatus(p)} title="Toggle status"><i className="fa-solid fa-toggle-on" /></button>
-                    <button className="btn btn-sm btn-outline-primary me-1" onClick={() => openEdit(p)}><i className="fa-solid fa-pen" /></button>
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(p.id)}><i className="fa-solid fa-trash" /></button>
+                  <td className="text-secondary font-monospace border-secondary bg-darker">{p.type}</td>
+                  <td className="text-secondary font-monospace border-secondary bg-darker">{p.contactEmail}</td>
+                  <td className="border-secondary bg-darker"><span className={`badge ${p.status === 'Active' ? 'bg-success' : 'bg-secondary'} font-monospace`}>{p.status}</span></td>
+                  <td className="border-secondary bg-darker">
+                    <div className="btn-group btn-group-sm">
+                      <button className="btn btn-outline-warning rounded-0" onClick={() => toggleStatus(p)} title="Toggle status"><i className="fa-solid fa-toggle-on" /></button>
+                      <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(p)}><i className="fa-solid fa-pen" /></button>
+                      <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(p.id || p.PartnerId || p.partnerId || p._id)}><i className="fa-solid fa-trash" /></button>
+                    </div>
                   </td>
                 </tr>
-                {expandedId === p.id && <PartnerInventoryRow partnerId={p.id} />}
+                {expandedId === (p.id || p.PartnerId || p.partnerId || p._id) && (
+                  <PartnerInventoryRow partnerId={p.id || p.PartnerId || p.partnerId || p._id} />
+                )}
               </React.Fragment>
             ))}
-            {partners.length === 0 && <tr><td colSpan={5} className="text-center text-muted">No partners found.</td></tr>}
+            {partners.length === 0 && (
+              <tr>
+                <td colSpan={5} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                  <i className="fa-solid fa-handshake me-2"></i>
+                  <span className="font-monospace">No partners found in registry.</span>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
       {showModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
+        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
           <div className="modal-dialog">
-            <form className="modal-content" onSubmit={handleSubmit}>
-              <div className="modal-header">
-                <h5 className="modal-title">{editPartner ? 'Edit Partner' : 'Add Partner'}</h5>
-                <button type="button" className="btn-close" onClick={() => setShowModal(false)} />
+            <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleSubmit}>
+              <div className="modal-header bg-dark border-secondary">
+                <div>
+                  <h5 className="text-white font-monospace text-uppercase mb-1">{editPartner ? 'Edit Partner' : 'Add Partner'}</h5>
+                  <small className="text-light font-monospace">Partner Management System</small>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+                  <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)} />
+                </div>
               </div>
-              <div className="modal-body">
-                {[
-                  { key: 'name', label: 'Name', required: true },
-                  { key: 'type', label: 'Type' },
-                  { key: 'contactEmail', label: 'Contact Email' },
-                  { key: 'contactPhone', label: 'Contact Phone' },
-                  { key: 'address', label: 'Address' },
-                ].map(({ key, label, required }) => (
-                  <div className="mb-2" key={key}>
-                    <label className="form-label">{label}</label>
-                    <input className="form-control" value={form[key]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} required={!!required} />
-                  </div>
-                ))}
+              <div className="modal-body bg-dark">
+                <div className="d-flex flex-column gap-3">
+                  {[
+                    { key: 'name', label: 'Name', required: true },
+                    { key: 'type', label: 'Type' },
+                    { key: 'contactEmail', label: 'Contact Email' },
+                    { key: 'contactPhone', label: 'Contact Phone' },
+                    { key: 'address', label: 'Address' },
+                  ].map(({ key, label, required }) => (
+                    <div key={key}>
+                      <label className="form-label text-white font-monospace text-uppercase small">{label}</label>
+                      <input className="form-control bg-dark text-white border-secondary rounded-0" value={form[key]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} required={!!required} />
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save</button>
+              <div className="modal-footer bg-dark border-secondary">
+                <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-outline-info rounded-0 font-monospace text-uppercase">
+                  <i className="fa-solid fa-save me-2"></i>Save Partner
+                </button>
               </div>
             </form>
           </div>
@@ -175,51 +204,235 @@ function PartnerInventoryRow({ partnerId }) {
   const [inventory, setInventory] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ name: '', type: '', price: '', capacity: '' })
+  const [showEdit, setShowEdit] = useState(false)
+  const [editItem, setEditItem] = useState(null)
+  const [form, setForm] = useState({ itemType: '', description: '', price: '', availability: '' })
 
-  const loadInv = () => partnersService.listInventory(partnerId).then(setInventory).catch(() => {}).finally(() => setLoading(false))
+  const loadInv = () => {
+    if (!partnerId) {
+      setLoading(false)
+      return Promise.resolve([])
+    }
+    return partnersService.listInventory(partnerId).then(setInventory).catch(() => {}).finally(() => setLoading(false))
+  }
   useEffect(() => { loadInv() }, [partnerId])
 
   const addItem = async (e) => {
     e.preventDefault()
+    if (!partnerId) {
+      alert('Partner ID is missing. Cannot add inventory item.')
+      return
+    }
     try {
       await partnersService.createInventory(partnerId, form)
-      setForm({ name: '', type: '', price: '', capacity: '' })
+      setForm({ itemType: '', description: '', price: '', availability: '' })
       setShowAdd(false)
       loadInv()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
 
+  const openEditItem = (item) => {
+    setEditItem(item)
+    setForm({
+      itemType: item.itemType || '',
+      description: item.description || '',
+      price: item.price || '',
+      availability: item.availability || ''
+    })
+    setShowEdit(true)
+  }
+
+  const updateItem = async (e) => {
+    e.preventDefault()
+    if (!partnerId || !editItem) {
+      alert('Partner ID or item information is missing.')
+      return
+    }
+    try {
+      await partnersService.updateInventory(partnerId, editItem.inventoryId, form)
+      setShowEdit(false)
+      setEditItem(null)
+      setForm({ itemType: '', description: '', price: '', availability: '' })
+      loadInv()
+    } catch (err) { alert(err?.response?.data?.message || err.message) }
+  }
+
+  const handleDeleteItem = async (inventoryId) => {
+    if (!window.confirm('Delete this inventory item?')) return
+    try {
+      await partnersService.deleteInventory(partnerId, inventoryId)
+      loadInv()
+    } catch (err) { alert(err?.response?.data?.message || err.message) }
+  }
+
+  const handleStatusChange = async (inventoryId, newStatus) => {
+    try {
+      await partnersService.patchInventoryStatus(partnerId, inventoryId, newStatus)
+      loadInv()
+    } catch (err) { alert(err?.response?.data?.message || err.message) }
+  }
+
   return (
-    <tr className="table-light">
-      <td colSpan={5} className="ps-5">
-        <strong className="d-block mb-2">Inventory Items</strong>
-        {loading ? <div className="spinner-border spinner-border-sm" /> : (
+    <tr className="bg-secondary bg-opacity-25 border-secondary">
+      <td colSpan={5} className="ps-5 border-secondary">
+        <div className="d-flex align-items-center mb-3">
+          <i className="fa-solid fa-boxes-stacked text-info me-2"></i>
+          <strong className="text-white font-monospace text-uppercase">Inventory Items</strong>
+          <div className="ms-auto spinner-grow spinner-grow-sm text-info" role="status"></div>
+        </div>
+        {loading ? (
+          <div className="d-flex align-items-center text-light font-monospace">
+            <div className="spinner-border spinner-border-sm me-2" />
+            <span>Loading inventory data...</span>
+          </div>
+        ) : (
           <>
-            <table className="table table-sm table-bordered mb-2">
-              <thead className="table-secondary">
-                <tr><th>Name</th><th>Type</th><th>Price</th><th>Capacity</th><th>Available</th></tr>
-              </thead>
-              <tbody>
-                {inventory.map(i => (
-                  <tr key={i.id}>
-                    <td>{i.name}</td><td>{i.type}</td><td>{i.price}</td><td>{i.capacity}</td>
-                    <td><span className={`badge ${i.isAvailable ? 'bg-success' : 'bg-danger'}`}>{i.isAvailable ? 'Yes' : 'No'}</span></td>
+            <div className="table-responsive">
+              <table className="table table-dark table-sm rounded-0 border-secondary">
+                <thead className="bg-info text-dark">
+                  <tr>
+                    <th className="font-monospace text-uppercase small border-secondary">Type</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Description</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Price</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Availability</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Status</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Actions</th>
                   </tr>
-                ))}
-                {inventory.length === 0 && <tr><td colSpan={5} className="text-muted text-center">No inventory items.</td></tr>}
-              </tbody>
-            </table>
-            {!showAdd ? (
-              <button className="btn btn-sm btn-outline-success" onClick={() => setShowAdd(true)}><i className="fa-solid fa-plus me-1" />Add Item</button>
+                </thead>
+                <tbody>
+                  {inventory.map(i => (
+                    <tr key={i.inventoryId} className="border-secondary bg-dark">
+                      <td className="text-secondary font-monospace border-secondary bg-darker">{i.itemType}</td>
+                      <td className="text-secondary font-monospace border-secondary bg-darker">{i.description}</td>
+                      <td className="text-secondary font-monospace border-secondary bg-darker">${i.price}</td>
+                      <td className="text-secondary font-monospace border-secondary bg-darker">{i.availability}</td>
+                      <td className="border-secondary bg-darker">
+                        <select 
+                          className="form-select form-select-sm bg-dark text-white border-secondary rounded-0" 
+                          style={{ width: 100 }} 
+                          value={i.status} 
+                          onChange={e => handleStatusChange(i.inventoryId, Number(e.target.value))}
+                        >
+                          <option value={1} className="bg-dark text-white">Active</option>
+                          <option value={0} className="bg-dark text-white">Inactive</option>
+                        </select>
+                      </td>
+                      <td className="border-secondary bg-darker">
+                        <div className="btn-group btn-group-sm">
+                          <button className="btn btn-outline-info rounded-0" onClick={() => openEditItem(i)} title="Edit">
+                            <i className="fa-solid fa-pen" />
+                          </button>
+                          <button className="btn btn-outline-danger rounded-0" onClick={() => handleDeleteItem(i.inventoryId)} title="Delete">
+                            <i className="fa-solid fa-trash" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {inventory.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                        <i className="fa-solid fa-warehouse me-2"></i>
+                        <span className="font-monospace">No inventory items on record.</span>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {!showAdd && !showEdit ? (
+              <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase mt-2" onClick={() => setShowAdd(true)}>
+                <i className="fa-solid fa-plus me-2" />Add Item
+              </button>
+            ) : showAdd ? (
+              <form onSubmit={addItem} className="d-flex gap-2 flex-wrap mt-2 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
+                <select 
+                  className="form-select form-select-sm bg-dark text-white border-secondary rounded-0" 
+                  style={{ width: 120 }} 
+                  value={form.itemType} 
+                  onChange={e => setForm(p => ({ ...p, itemType: e.target.value }))}
+                  required
+                >
+                  <option value="" className="bg-dark text-white">Select Type</option>
+                  <option value="Hotel" className="bg-dark text-white">Hotel</option>
+                  <option value="Flight" className="bg-dark text-white">Flight</option>
+                  <option value="Transport" className="bg-dark text-white">Transport</option>
+                </select>
+                <textarea 
+                  className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" 
+                  style={{ width: 180 }} 
+                  placeholder="Description" 
+                  rows={1}
+                  value={form.description || ''} 
+                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))} 
+                  required 
+                />
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" 
+                  style={{ width: 100 }} 
+                  placeholder="Price" 
+                  value={form.price} 
+                  onChange={e => setForm(p => ({ ...p, price: e.target.value }))} 
+                  required 
+                />
+                <input 
+                  type="number" 
+                  className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" 
+                  style={{ width: 100 }} 
+                  placeholder="Availability" 
+                  value={form.availability} 
+                  onChange={e => setForm(p => ({ ...p, availability: e.target.value }))} 
+                  required 
+                />
+                <button type="submit" className="btn btn-info btn-sm rounded-0 font-monospace">Add</button>
+                <button type="button" className="btn btn-secondary btn-sm rounded-0 font-monospace" onClick={() => setShowAdd(false)}>Cancel</button>
+              </form>
             ) : (
-              <form onSubmit={addItem} className="d-flex gap-2 flex-wrap">
-                {['name', 'type', 'price', 'capacity'].map(f => (
-                  <input key={f} className="form-control form-control-sm" style={{ width: 120 }} placeholder={f} value={form[f]}
-                    onChange={e => setForm(p => ({ ...p, [f]: e.target.value }))} required />
-                ))}
-                <button type="submit" className="btn btn-sm btn-success">Add</button>
-                <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowAdd(false)}>Cancel</button>
+              <form onSubmit={updateItem} className="d-flex gap-2 flex-wrap mt-2 p-3 bg-warning bg-opacity-10 border-warning rounded-0">
+                <select 
+                  className="form-select form-select-sm bg-dark text-white border-warning rounded-0" 
+                  style={{ width: 120 }} 
+                  value={form.itemType} 
+                  onChange={e => setForm(p => ({ ...p, itemType: e.target.value }))}
+                  required
+                >
+                  <option value="" className="bg-dark text-white">Select Type</option>
+                  <option value="Hotel" className="bg-dark text-white">Hotel</option>
+                  <option value="Flight" className="bg-dark text-white">Flight</option>
+                  <option value="Transport" className="bg-dark text-white">Transport</option>
+                </select>
+                <textarea 
+                  className="form-control form-control-sm bg-dark text-white border-warning rounded-0" 
+                  style={{ width: 180 }} 
+                  placeholder="Description" 
+                  rows={1}
+                  value={form.description || ''} 
+                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))} 
+                  required 
+                />
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  className="form-control form-control-sm bg-dark text-white border-warning rounded-0" 
+                  style={{ width: 100 }} 
+                  placeholder="Price" 
+                  value={form.price} 
+                  onChange={e => setForm(p => ({ ...p, price: e.target.value }))} 
+                  required 
+                />
+                <input 
+                  type="number" 
+                  className="form-control form-control-sm bg-dark text-white border-warning rounded-0" 
+                  style={{ width: 100 }} 
+                  placeholder="Availability" 
+                  value={form.availability} 
+                  onChange={e => setForm(p => ({ ...p, availability: e.target.value }))} 
+                  required 
+                />
+                <button type="submit" className="btn btn-warning btn-sm rounded-0 font-monospace">Update</button>
+                <button type="button" className="btn btn-secondary btn-sm rounded-0 font-monospace" onClick={() => { setShowEdit(false); setEditItem(null) }}>Cancel</button>
               </form>
             )}
           </>

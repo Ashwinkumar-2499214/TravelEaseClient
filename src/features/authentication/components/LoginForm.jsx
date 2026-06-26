@@ -30,37 +30,57 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '70vh' }}>
-      <form onSubmit={submit} className="card p-4 shadow-sm" style={{ width: '100%', maxWidth: 420 }}>
-        <h4 className="mb-1">Sign in to TravelEase</h4>
-        <p className="text-muted small mb-3">Enter your credentials to continue</p>
-        {error && <div className="alert alert-danger py-2">{error}</div>}
-        <div className="mb-3">
-          <label className="form-label">Email address</label>
-          <input
-            type="email"
-            className="form-control"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            autoComplete="email"
-            required
-          />
+    <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-dark">
+      <div className="card bg-secondary bg-opacity-10 border-secondary rounded-0" style={{ width: '100%', maxWidth: 420 }}>
+        <div className="card-header bg-dark border-secondary d-flex align-items-center justify-content-between">
+          <div>
+            <h5 className="text-white font-monospace text-uppercase mb-1">System Access</h5>
+            <small className="text-light font-monospace">TravelEase Terminal v2.1</small>
+          </div>
+          <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
         </div>
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            className="form-control"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
-        </div>
-        <button className="btn btn-primary w-100" disabled={loading}>
-          {loading ? <><span className="spinner-border spinner-border-sm me-2" />Signing in...</> : 'Sign in'}
-        </button>
-      </form>
+        <form onSubmit={submit} className="card-body p-4">
+          {error && (
+            <div className="alert alert-danger border-0 rounded-0 bg-danger bg-opacity-10 text-danger py-2 mb-3">
+              <i className="fas fa-exclamation-triangle me-2"></i>{error}
+            </div>
+          )}
+          <div className="d-flex flex-column gap-3">
+            <div>
+              <label className="form-label text-white font-monospace text-uppercase small">Email Address</label>
+              <input
+                type="email"
+                className="form-control bg-dark text-light border-secondary rounded-0"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+            </div>
+            <div>
+              <label className="form-label text-white font-monospace text-uppercase small">Password</label>
+              <input
+                type="password"
+                className="form-control bg-dark text-light border-secondary rounded-0"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </div>
+            <button className="btn btn-outline-info rounded-0 font-monospace text-uppercase" disabled={loading}>
+              {loading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" />
+                  <span className="font-monospace">Authenticating...</span>
+                </>
+              ) : (
+                'Initialize Session'
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

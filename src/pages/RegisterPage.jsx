@@ -66,112 +66,115 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '70vh' }}>
-      <form onSubmit={submit} className="card p-4 shadow-sm" style={{ width: '100%', maxWidth: 420 }}>
-        
-        <h4 className="mb-1">Create an account</h4>
-        <p className="text-muted small mb-3">
-          Fill in the details below to register
-        </p>
-
-        {error && <div className="alert alert-danger py-2">{error}</div>}
-
-        {/* Name */}
-        <div className="mb-3">
-          <label className="form-label">Full Name</label>
-          <input
-            type="text"
-            className="form-control"
-            value={form.name}
-            onChange={set('name')}
-            required
-          />
+    <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-dark">
+      <div className="card bg-secondary bg-opacity-10 border-secondary rounded-0" style={{ width: '100%', maxWidth: 420 }}>
+        <div className="card-header bg-dark border-secondary d-flex align-items-center justify-content-between">
+          <div>
+            <h5 className="text-white font-monospace text-uppercase mb-1">System Registration</h5>
+            <small className="text-light font-monospace">TravelEase Terminal v2.1</small>
+          </div>
+          <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
         </div>
-
-        {/* Email */}
-        <div className="mb-3">
-          <label className="form-label">Email address</label>
-          <input
-            type="email"
-            className="form-control"
-            value={form.email}
-            onChange={set('email')}
-            autoComplete="email"
-            required
-          />
-        </div>
-
-        {/* Phone */}
-        <div className="mb-3">
-          <label className="form-label">Phone Number</label>
-          <input
-            type="tel"
-            className="form-control"
-            value={form.phone}
-            onChange={set('phone')}
-            placeholder="Enter phone number"
-            required
-          />
-        </div>
-
-        {/* Role */}
-        <div className="mb-3">
-          <label className="form-label">Role</label>
-          <select
-            className="form-select"
-            value={form.role}
-            onChange={set('role')}
-          >
-            {ROLES.map(r => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Password */}
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            className="form-control"
-            value={form.password}
-            onChange={set('password')}
-            autoComplete="new-password"
-            required
-          />
-        </div>
-
-        {/* Confirm Password */}
-        <div className="mb-3">
-          <label className="form-label">Confirm Password</label>
-          <input
-            type="password"
-            className="form-control"
-            value={form.confirmPassword}
-            onChange={set('confirmPassword')}
-            required
-          />
-        </div>
-
-        {/* Submit */}
-        <button className="btn btn-success w-100" disabled={loading}>
-          {loading ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2" />
-              Registering...
-            </>
-          ) : (
-            'Create Account'
+        <form onSubmit={submit} className="card-body p-4">
+          {error && (
+            <div className="alert alert-danger border-0 rounded-0 bg-danger bg-opacity-10 text-danger py-2 mb-3">
+              <i className="fas fa-exclamation-triangle me-2"></i>{error}
+            </div>
           )}
-        </button>
-
-        <p className="text-center text-muted small mt-3 mb-0">
-          Already have an account? <Link to="/login">Sign in</Link>
-        </p>
-
-      </form>
+          
+          <div className="d-flex flex-column gap-3">
+            <div>
+              <label className="form-label text-white font-monospace text-uppercase small">Full Name</label>
+              <input
+                type="text"
+                className="form-control bg-dark text-white border-secondary rounded-0"
+                value={form.name}
+                onChange={set('name')}
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="form-label text-white font-monospace text-uppercase small">Email Address</label>
+              <input
+                type="email"
+                className="form-control bg-dark text-white border-secondary rounded-0"
+                value={form.email}
+                onChange={set('email')}
+                autoComplete="email"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="form-label text-white font-monospace text-uppercase small">Phone Number</label>
+              <input
+                type="tel"
+                className="form-control bg-dark text-white border-secondary rounded-0"
+                value={form.phone}
+                onChange={set('phone')}
+                placeholder="Enter phone number"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="form-label text-white font-monospace text-uppercase small">System Role</label>
+              <select
+                className="form-select bg-dark text-white border-secondary rounded-0"
+                value={form.role}
+                onChange={set('role')}
+              >
+                {ROLES.map(r => (
+                  <option key={r.value} value={r.value} className="bg-dark text-white">
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="form-label text-white font-monospace text-uppercase small">Password</label>
+              <input
+                type="password"
+                className="form-control bg-dark text-white border-secondary rounded-0"
+                value={form.password}
+                onChange={set('password')}
+                autoComplete="new-password"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="form-label text-white font-monospace text-uppercase small">Confirm Password</label>
+              <input
+                type="password"
+                className="form-control bg-dark text-white border-secondary rounded-0"
+                value={form.confirmPassword}
+                onChange={set('confirmPassword')}
+                required
+              />
+            </div>
+            
+            <button className="btn btn-outline-info rounded-0 font-monospace text-uppercase" disabled={loading}>
+              {loading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" />
+                  <span className="font-monospace">Processing...</span>
+                </>
+              ) : (
+                'Register User'
+              )}
+            </button>
+          </div>
+          
+          <div className="text-center mt-4">
+            <small className="text-light font-monospace">
+              Existing User? <Link to="/login" className="text-info text-decoration-none">Sign in</Link>
+            </small>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

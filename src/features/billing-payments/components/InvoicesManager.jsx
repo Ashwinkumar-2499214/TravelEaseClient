@@ -67,44 +67,68 @@ export default function InvoicesManager() {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="mb-0">Invoice Registry</h5>
-        <button className="btn btn-primary btn-sm" onClick={openCreate}><i className="fa-solid fa-plus me-1" />New Invoice</button>
+      <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
+        <div>
+          <h5 className="text-white font-monospace text-uppercase mb-1">Invoice Registry</h5>
+          <small className="text-light font-monospace">Financial Management System</small>
+        </div>
+        <div className="d-flex align-items-center gap-3">
+          <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+          <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
+            <i className="fa-solid fa-plus me-2" />New Invoice
+          </button>
+        </div>
       </div>
       <div className="table-responsive">
-        <table className="table table-hover table-bordered align-middle">
-          <thead className="table-dark">
-            <tr><th>Invoice #</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Change Status</th><th>Actions</th></tr>
+        <table className="table table-dark table-hover align-middle rounded-0 border-secondary">
+          <thead className="bg-info text-dark">
+            <tr>
+              <th className="font-monospace text-uppercase small border-secondary">Invoice #</th>
+              <th className="font-monospace text-uppercase small border-secondary">Amount</th>
+              <th className="font-monospace text-uppercase small border-secondary">Due Date</th>
+              <th className="font-monospace text-uppercase small border-secondary">Status</th>
+              <th className="font-monospace text-uppercase small border-secondary">Change Status</th>
+              <th className="font-monospace text-uppercase small border-secondary">Actions</th>
+            </tr>
           </thead>
           <tbody>
             {invoices.map(inv => (
               <React.Fragment key={inv.id}>
-                <tr>
-                  <td>
-                    <button className="btn btn-link btn-sm p-0 me-2 text-decoration-none" onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}>
+                <tr className="border-secondary">
+                  <td className="text-white font-monospace border-secondary">
+                    <button className="btn btn-link btn-sm p-0 me-2 text-info text-decoration-none" onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}>
                       <i className={`fa-solid ${expandedId === inv.id ? 'fa-chevron-down' : 'fa-chevron-right'}`} />
                     </button>
                     {inv.number || inv.id}
                   </td>
-                  <td>${inv.amount}</td>
-                  <td>{formatDate(inv.dueDate)}</td>
-                  <td>{statusBadge(inv.status)}</td>
-                  <td>
-                    <select className="form-select form-select-sm" style={{ width: 130 }} value={inv.status}
+                  <td className="text-light font-monospace border-secondary">${inv.amount}</td>
+                  <td className="text-light font-monospace border-secondary">{formatDate(inv.dueDate)}</td>
+                  <td className="border-secondary">{statusBadge(inv.status)}</td>
+                  <td className="border-secondary">
+                    <select className="form-select form-select-sm bg-dark text-light border-secondary rounded-0" style={{ width: 130 }} value={inv.status}
                       onChange={e => handleStatus(inv.id, e.target.value)}>
-                      {STATUSES.map(s => <option key={s}>{s}</option>)}
+                      {STATUSES.map(s => <option key={s} className="bg-dark text-light">{s}</option>)}
                     </select>
                   </td>
-                  <td>
-                    <button className="btn btn-sm btn-outline-warning me-1" title="Adjustment" onClick={() => { setAdjModal(inv.id); setAdjForm({ amount: '', reason: '' }) }}><i className="fa-solid fa-sliders" /></button>
-                    <button className="btn btn-sm btn-outline-primary me-1" onClick={() => openEdit(inv)}><i className="fa-solid fa-pen" /></button>
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(inv.id)}><i className="fa-solid fa-trash" /></button>
+                  <td className="border-secondary">
+                    <div className="btn-group btn-group-sm">
+                      <button className="btn btn-outline-warning rounded-0" title="Adjustment" onClick={() => { setAdjModal(inv.id); setAdjForm({ amount: '', reason: '' }) }}><i className="fa-solid fa-sliders" /></button>
+                      <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(inv)}><i className="fa-solid fa-pen" /></button>
+                      <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(inv.id)}><i className="fa-solid fa-trash" /></button>
+                    </div>
                   </td>
                 </tr>
                 {expandedId === inv.id && <InvoicePaymentsRow invoiceId={inv.id} />}
               </React.Fragment>
             ))}
-            {invoices.length === 0 && <tr><td colSpan={6} className="text-center text-muted">No invoices found.</td></tr>}
+            {invoices.length === 0 && (
+              <tr>
+                <td colSpan={6} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                  <i className="fa-solid fa-file-invoice me-2"></i>
+                  <span className="font-monospace">No invoices found in system registry.</span>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

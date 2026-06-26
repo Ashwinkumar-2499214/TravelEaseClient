@@ -55,15 +55,20 @@ export default function Sidebar() {
   const links = ROLE_LINKS[role] || ROLE_LINKS.Traveler
 
   return (
-    <div className="bg-light border-end" style={{ width: 220, minHeight: 'calc(100vh - 112px)', flexShrink: 0 }}>
+    <div className="bg-secondary bg-opacity-10 border-end border-secondary" style={{ width: 220, minHeight: 'calc(100vh - 112px)', flexShrink: 0 }}>
       <div className="p-2">
-        <div className="text-muted small text-uppercase fw-bold px-2 py-2">{role}</div>
-        <ul className="nav flex-column">
+        <div className="bg-dark border-secondary rounded-0 p-2 mb-3">
+          <div className="text-info font-monospace text-uppercase fw-bold small d-flex align-items-center">
+            <div className="spinner-grow spinner-grow-sm text-info me-2" role="status"></div>
+            {role}
+          </div>
+        </div>
+        <ul className="nav flex-column gap-1">
           {links.map(l => (
             <li className="nav-item" key={l.to}>
               <NavLink
                 to={l.to}
-                className={({ isActive }) => `nav-link py-2 px-2 rounded ${isActive ? 'active bg-primary text-white' : 'text-dark'}`}
+                className={({ isActive }) => `nav-link py-2 px-3 rounded-0 font-monospace small text-uppercase ${isActive ? 'bg-info text-dark fw-bold' : 'text-white border-secondary'}`}
               >
                 <i className={`${l.icon} me-2`} />{l.label}
               </NavLink>

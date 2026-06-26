@@ -23,8 +23,11 @@ export default function DashboardPage() {
   const { currentUser, authReady } = useAuth()
 
   if (!authReady) return (
-    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
-      <div className="spinner-border text-primary" />
+    <div className="d-flex justify-content-center align-items-center bg-dark" style={{ minHeight: '60vh' }}>
+      <div className="d-flex flex-column align-items-center">
+        <div className="spinner-border text-info mb-3" />
+        <span className="text-light font-monospace">Loading System...</span>
+      </div>
     </div>
   )
 
@@ -36,7 +39,7 @@ export default function DashboardPage() {
   return (
     <div className="d-flex" style={{ minHeight: 'calc(100vh - 112px)' }}>
       <Sidebar />
-      <div className="flex-grow-1 p-3">
+      <div className="flex-grow-1 p-3 bg-dark">
         <ProtectedRoute>
           <Routes>
             <Route path="/*" element={<RoleDashboard />} />

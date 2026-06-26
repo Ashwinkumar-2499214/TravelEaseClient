@@ -1,9 +1,11 @@
 body {
-  background-color: #f8f9fa;
+  background-color: #212529;
+  color: #f8f9fa;
 }
 
 .nav-link.active {
   font-weight: 600;
+  color: #0dcaf0 !important;
 }
 
 .modal.show.d-block {
@@ -12,8 +14,42 @@ body {
 
 .table th, .table td {
   vertical-align: middle;
+  color: #f8f9fa;
 }
 
 .card {
-  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  border: 1px solid #6c757d;
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #f8f9fa;
+}
+
+/* Industrial theme overrides */
+.form-control:focus {
+  border-color: #0dcaf0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+}
+
+.btn-outline-info:hover {
+  background-color: #0dcaf0;
+  border-color: #0dcaf0;
+  color: #000;
+}
+
+/* Enhanced text readability */
+.text-body-secondary {
+  color: #adb5bd !important;
+}
+
+.text-muted {
+  color: #adb5bd !important;
+}
+
+/* Form controls */
+.form-control::placeholder {
+  color: #6c757d;
+}
+
+.form-select option {
+  background-color: #343a40 !important;
+  color: #f8f9fa !important;
 }

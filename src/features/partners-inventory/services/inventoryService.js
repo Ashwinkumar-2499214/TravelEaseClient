@@ -8,7 +8,7 @@ const inventoryService = {
       params: { 
         pageNumber: 1, 
         pageSize: 100, 
-        ItemType: 'All', // Sends "All" instead of an empty string to bypass the strict requirement
+        ItemType: 'a',
         ...params 
       } 
     }).then(unwrap),

@@ -14,25 +14,35 @@ export default function InventorySearch() {
 
   useEffect(() => {
     inventoryService.listAll()
-      .then(d => { setItems(d); setFiltered(d) })
+      .then(d => { 
+        const dataArray = d.data || d; 
+        setItems(dataArray); 
+        setFiltered(dataArray); 
+      })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [])
 
   useEffect(() => {
     const q = search.toLowerCase()
-    setFiltered(items.filter(i => (i.name || '').toLowerCase().includes(q) || (i.type || '').toLowerCase().includes(q)))
+    setFiltered(items.filter(i => 
+      (i.description || '').toLowerCase().includes(q) || 
+      (i.itemType || '').toLowerCase().includes(q)
+    ))
   }, [search, items])
 
   const handleBook = async (e) => {
     e.preventDefault()
     setBooking(true)
     try {
-      await bookingsService.create({ inventoryId: bookingItem.id, ...bookForm })
+      await bookingsService.create({ inventoryId: bookingItem.inventoryId, ...bookForm })
       alert('Booking created successfully!')
       setBookingItem(null)
-    } catch (err) { alert(err?.response?.data?.message || err.message) }
-    finally { setBooking(false) }
+    } catch (err) { 
+      alert(err?.response?.data?.message || err.message) 
+    } finally { 
+      setBooking(false) 
+    }
   }
 
   if (loading) return <div className="text-center py-4"><div className="spinner-border" /></div>
@@ -42,29 +52,45 @@ export default function InventorySearch() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5 className="mb-0">Search Inventory</h5>
-        <input className="form-control w-auto" placeholder="Search by name or type..." value={search} onChange={e => setSearch(e.target.value)} style={{ minWidth: 240 }} />
+        <input 
+          className="form-control w-auto" 
+          placeholder="Search by description or type..." 
+          value={search} 
+          onChange={e => setSearch(e.target.value)} 
+          style={{ minWidth: 240 }} 
+        />
       </div>
       <div className="row g-3">
-        {filtered.map(item => (
-          <div className="col-md-4" key={item.id}>
-            <div className="card h-100">
-              <div className="card-body">
-                <h6 className="card-title">{item.name}</h6>
-                <p className="text-muted small mb-1">{item.type}</p>
-                <p className="mb-1"><strong>Price:</strong> ${item.price}</p>
-                <p className="mb-2"><strong>Capacity:</strong> {item.capacity}</p>
-                <span className={`badge ${item.isAvailable ? 'bg-success' : 'bg-secondary'} mb-2`}>
-                  {item.isAvailable ? 'Available' : 'Unavailable'}
-                </span>
-              </div>
-              <div className="card-footer">
-                <button className="btn btn-primary btn-sm w-100" disabled={!item.isAvailable} onClick={() => { setBookingItem(item); setBookForm({ startDate: '', endDate: '', notes: '' }) }}>
-                  Book Now
-                </button>
+        {filtered.map(item => {
+          const isAvailable = item.status === 1; 
+
+          return (
+            <div className="col-md-4" key={item.inventoryId}>
+              <div className="card h-100">
+                <div className="card-body">
+                  <h6 className="card-title">{item.description}</h6>
+                  <p className="text-muted small mb-1">{item.itemType}</p>
+                  <p className="mb-1"><strong>Price:</strong> ${item.price.toFixed(2)}</p>
+                  <p className="mb-2"><strong>Capacity:</strong> {item.availability}</p>
+                  <span className={`badge ${isAvailable ? 'bg-success' : 'bg-secondary'} mb-2`}>
+                    {isAvailable ? 'Available' : 'Unavailable'}
+                  </span>
+                </div>
+                <div className="card-footer">
+                  <button 
+                    className="btn btn-primary btn-sm w-100" 
+                    disabled={!isAvailable} 
+                    onClick={() => { 
+                      setBookingItem(item); 
+                      setBookForm({ startDate: '', endDate: '', notes: '' }) 
+                    }}>
+                    Book Now
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
         {filtered.length === 0 && <div className="col"><p className="text-muted">No inventory items found.</p></div>}
       </div>
 
@@ -74,11 +100,11 @@ export default function InventorySearch() {
             <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleBook}>
               <div className="modal-header bg-dark border-secondary">
                 <div>
-                  <h5 className="text-white font-monospace text-uppercase mb-1">Book: {bookingItem.name}</h5>
+                  <h5 className="text-white font-monospace text-uppercase mb-1">Book: {bookingItem.description}</h5>
                   <small className="text-light font-monospace">Inventory Reservation System</small>
                 </div>
                 <div className="d-flex align-items-center gap-2">
-                  <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+                  {booking && <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>}
                   <button type="button" className="btn-close btn-close-white" onClick={() => setBookingItem(null)} />
                 </div>
               </div>

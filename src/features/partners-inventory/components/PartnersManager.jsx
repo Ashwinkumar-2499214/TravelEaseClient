@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import partnersService from '../services/partnersService'
 
-const EMPTY = { name: '', type: '', contactEmail: '', contactPhone: '', address: '' }
+const PARTNER_TYPES = [{ value: 1, label: 'Hotel' }, { value: 2, label: 'Transport Provider' }, { value: 3, label: 'Tour Operator' }]
+const PARTNER_STATUSES = [{ value: 1, label: 'Active' }, { value: 2, label: 'Inactive' }]
+
+const getTypeLabel = (val) => PARTNER_TYPES.find(t => t.value === Number(val))?.label ?? val
+const getStatusLabel = (val) => PARTNER_STATUSES.find(s => s.value === Number(val))?.label ?? val
+
+const EMPTY = { name: '', type: '', status: 1, contactEmail: '', contactPhone: '', address: '' }
 
 export default function PartnersManager() {
   const [partners, setPartners] = useState([])
@@ -11,7 +17,7 @@ export default function PartnersManager() {
   const [editPartner, setEditPartner] = useState(null)
   const [form, setForm] = useState(EMPTY)
   const [expandedId, setExpandedId] = useState(null)
-  const [searchInput, setSearchInput] = useState('a')
+  const [searchInput, setSearchInput] = useState('')
 
   const load = (searchVal = searchInput) => {
     setLoading(true)
@@ -36,14 +42,14 @@ export default function PartnersManager() {
   }
 
   const handleClearSearch = () => {
-    setSearchInput('a')
-    load('a') 
+    setSearchInput('')
+    load('') 
   }
 
   const openCreate = () => { setEditPartner(null); setForm(EMPTY); setShowModal(true) }
   const openEdit = (p) => {
     setEditPartner(p)
-    setForm({ name: p.name || '', type: p.type || '', contactEmail: p.contactEmail || '', contactPhone: p.contactPhone || '', address: p.address || '' })
+    setForm({ name: p.name || '', type: p.type || '', status: p.status || 1, contactEmail: p.contactEmail || '', contactPhone: p.contactPhone || '', address: p.address || '' })
     setShowModal(true)
   }
 
@@ -64,7 +70,8 @@ export default function PartnersManager() {
 
   const toggleStatus = async (p) => {
     const partnerId = p.id || p.PartnerId || p.partnerId || p._id
-    const next = p.status === 'Active' ? 'Inactive' : 'Active'
+    const currentStatus = Number(p.status)
+    const next = currentStatus === 1 ? 2 : 1
     try { await partnersService.patchStatus(partnerId, next); load() }
     catch (err) { alert(err?.response?.data?.message || err.message) }
   }
@@ -114,6 +121,7 @@ export default function PartnersManager() {
               <th className="font-monospace text-uppercase small border-secondary">Name</th>
               <th className="font-monospace text-uppercase small border-secondary">Type</th>
               <th className="font-monospace text-uppercase small border-secondary">Contact Email</th>
+              <th className="font-monospace text-uppercase small border-secondary">Contact Phone</th>
               <th className="font-monospace text-uppercase small border-secondary">Status</th>
               <th className="font-monospace text-uppercase small border-secondary">Actions</th>
             </tr>
@@ -128,9 +136,10 @@ export default function PartnersManager() {
                     </button>
                     <span className="text-secondary">{p.name}</span>
                   </td>
-                  <td className="text-secondary font-monospace border-secondary bg-darker">{p.type}</td>
+                  <td className="text-secondary font-monospace border-secondary bg-darker">{getTypeLabel(p.type)}</td>
                   <td className="text-secondary font-monospace border-secondary bg-darker">{p.contactEmail}</td>
-                  <td className="border-secondary bg-darker"><span className={`badge ${p.status === 'Active' ? 'bg-success' : 'bg-secondary'} font-monospace`}>{p.status}</span></td>
+                  <td className="text-secondary font-monospace border-secondary bg-darker">{p.contactPhone}</td>
+                  <td className="border-secondary bg-darker"><span className={`badge ${getStatusLabel(p.status) === 'Active' ? 'bg-success' : 'bg-secondary'} font-monospace`}>{getStatusLabel(p.status)}</span></td>
                   <td className="border-secondary bg-darker">
                     <div className="btn-group btn-group-sm">
                       <button className="btn btn-outline-warning rounded-0" onClick={() => toggleStatus(p)} title="Toggle status"><i className="fa-solid fa-toggle-on" /></button>
@@ -146,7 +155,7 @@ export default function PartnersManager() {
             ))}
             {partners.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                <td colSpan={6} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
                   <i className="fa-solid fa-handshake me-2"></i>
                   <span className="font-monospace">No partners found in registry.</span>
                 </td>
@@ -172,16 +181,27 @@ export default function PartnersManager() {
               </div>
               <div className="modal-body bg-dark">
                 <div className="d-flex flex-column gap-3">
-                  {[
-                    { key: 'name', label: 'Name', required: true },
-                    { key: 'type', label: 'Type' },
-                    { key: 'contactEmail', label: 'Contact Email' },
-                    { key: 'contactPhone', label: 'Contact Phone' },
-                    { key: 'address', label: 'Address' },
-                  ].map(({ key, label, required }) => (
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Name</label>
+                    <input className="form-control bg-dark text-white border-secondary rounded-0" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Type</label>
+                    <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.type} onChange={e => setForm(p => ({ ...p, type: Number(e.target.value) }))} required>
+                      <option value="" className="bg-dark text-white">-- Select Type --</option>
+                      {PARTNER_TYPES.map(t => <option key={t.value} value={t.value} className="bg-dark text-white">{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Status</label>
+                    <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.status} onChange={e => setForm(p => ({ ...p, status: Number(e.target.value) }))}>
+                      {PARTNER_STATUSES.map(s => <option key={s.value} value={s.value} className="bg-dark text-white">{s.label}</option>)}
+                    </select>
+                  </div>
+                  {[{ key: 'contactEmail', label: 'Contact Email' }, { key: 'contactPhone', label: 'Contact Phone' }, { key: 'address', label: 'Address' }].map(({ key, label }) => (
                     <div key={key}>
                       <label className="form-label text-white font-monospace text-uppercase small">{label}</label>
-                      <input className="form-control bg-dark text-white border-secondary rounded-0" value={form[key]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} required={!!required} />
+                      <input className="form-control bg-dark text-white border-secondary rounded-0" value={form[key]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} />
                     </div>
                   ))}
                 </div>
@@ -206,7 +226,15 @@ function PartnerInventoryRow({ partnerId }) {
   const [showAdd, setShowAdd] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [editItem, setEditItem] = useState(null)
-  const [form, setForm] = useState({ itemType: '', description: '', price: '', availability: '' })
+  const [form, setForm] = useState({ itemType: '', description: '', price: '', availability: '', status: 1 })
+
+  const INVENTORY_STATUSES = [
+    { value: 1, label: 'Available' },
+    { value: 2, label: 'Limited' },
+    { value: 3, label: 'Sold Out' },
+    { value: 4, label: 'Unavailable' },
+    { value: 5, label: 'Maintenance' },
+  ]
 
   const loadInv = () => {
     if (!partnerId) {
@@ -225,7 +253,7 @@ function PartnerInventoryRow({ partnerId }) {
     }
     try {
       await partnersService.createInventory(partnerId, form)
-      setForm({ itemType: '', description: '', price: '', availability: '' })
+      setForm({ itemType: '', description: '', price: '', availability: '', status: 1 })
       setShowAdd(false)
       loadInv()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
@@ -237,7 +265,8 @@ function PartnerInventoryRow({ partnerId }) {
       itemType: item.itemType || '',
       description: item.description || '',
       price: item.price || '',
-      availability: item.availability || ''
+      availability: item.availability || '',
+      status: item.status ?? 1,
     })
     setShowEdit(true)
   }
@@ -252,7 +281,7 @@ function PartnerInventoryRow({ partnerId }) {
       await partnersService.updateInventory(partnerId, editItem.inventoryId, form)
       setShowEdit(false)
       setEditItem(null)
-      setForm({ itemType: '', description: '', price: '', availability: '' })
+      setForm({ itemType: '', description: '', price: '', availability: '', status: 1 })
       loadInv()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
@@ -266,15 +295,19 @@ function PartnerInventoryRow({ partnerId }) {
   }
 
   const handleStatusChange = async (inventoryId, newStatus) => {
+    setInventory(prev => prev.map(i => i.inventoryId === inventoryId ? { ...i, status: newStatus } : i))
     try {
       await partnersService.patchInventoryStatus(partnerId, inventoryId, newStatus)
+    } catch (err) {
+      setInventory(prev => prev.map(i => i.inventoryId === inventoryId ? { ...i, status: i.status } : i))
+      alert(err?.response?.data?.message || err.message)
       loadInv()
-    } catch (err) { alert(err?.response?.data?.message || err.message) }
+    }
   }
 
   return (
     <tr className="bg-secondary bg-opacity-25 border-secondary">
-      <td colSpan={5} className="ps-5 border-secondary">
+      <td colSpan={6} className="ps-5 border-secondary">
         <div className="d-flex align-items-center mb-3">
           <i className="fa-solid fa-boxes-stacked text-info me-2"></i>
           <strong className="text-white font-monospace text-uppercase">Inventory Items</strong>
@@ -291,7 +324,7 @@ function PartnerInventoryRow({ partnerId }) {
               <table className="table table-dark table-sm rounded-0 border-secondary">
                 <thead className="bg-info text-dark">
                   <tr>
-                    <th className="font-monospace text-uppercase small border-secondary">Type</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Name</th>
                     <th className="font-monospace text-uppercase small border-secondary">Description</th>
                     <th className="font-monospace text-uppercase small border-secondary">Price</th>
                     <th className="font-monospace text-uppercase small border-secondary">Availability</th>
@@ -313,8 +346,11 @@ function PartnerInventoryRow({ partnerId }) {
                           value={i.status} 
                           onChange={e => handleStatusChange(i.inventoryId, Number(e.target.value))}
                         >
-                          <option value={1} className="bg-dark text-white">Active</option>
-                          <option value={0} className="bg-dark text-white">Inactive</option>
+                          {INVENTORY_STATUSES.map(s => (
+                            <option key={s.value} value={s.value} className="bg-dark text-white">
+                              {s.label}
+                            </option>
+                          ))}
                         </select>
                       </td>
                       <td className="border-secondary bg-darker">
@@ -346,18 +382,15 @@ function PartnerInventoryRow({ partnerId }) {
               </button>
             ) : showAdd ? (
               <form onSubmit={addItem} className="d-flex gap-2 flex-wrap mt-2 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
-                <select 
-                  className="form-select form-select-sm bg-dark text-white border-secondary rounded-0" 
-                  style={{ width: 120 }} 
-                  value={form.itemType} 
+                <input
+                  type="text"
+                  className="form-control form-control-sm bg-dark text-white border-secondary rounded-0"
+                  style={{ width: 140 }}
+                  placeholder="Name"
+                  value={form.itemType}
                   onChange={e => setForm(p => ({ ...p, itemType: e.target.value }))}
                   required
-                >
-                  <option value="" className="bg-dark text-white">Select Type</option>
-                  <option value="Hotel" className="bg-dark text-white">Hotel</option>
-                  <option value="Flight" className="bg-dark text-white">Flight</option>
-                  <option value="Transport" className="bg-dark text-white">Transport</option>
-                </select>
+                />
                 <textarea 
                   className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" 
                   style={{ width: 180 }} 
@@ -386,23 +419,33 @@ function PartnerInventoryRow({ partnerId }) {
                   onChange={e => setForm(p => ({ ...p, availability: e.target.value }))} 
                   required 
                 />
+                <select
+                  className="form-select form-select-sm bg-dark text-white border-secondary rounded-0"
+                  style={{ width: 140 }}
+                  value={form.status}
+                  onChange={e => setForm(p => ({ ...p, status: Number(e.target.value) }))}
+                  required
+                >
+                  {INVENTORY_STATUSES.map(s => (
+                    <option key={s.value} value={s.value} className="bg-dark text-white">
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
                 <button type="submit" className="btn btn-info btn-sm rounded-0 font-monospace">Add</button>
                 <button type="button" className="btn btn-secondary btn-sm rounded-0 font-monospace" onClick={() => setShowAdd(false)}>Cancel</button>
               </form>
             ) : (
               <form onSubmit={updateItem} className="d-flex gap-2 flex-wrap mt-2 p-3 bg-warning bg-opacity-10 border-warning rounded-0">
-                <select 
-                  className="form-select form-select-sm bg-dark text-white border-warning rounded-0" 
-                  style={{ width: 120 }} 
-                  value={form.itemType} 
+                <input
+                  type="text"
+                  className="form-control form-control-sm bg-dark text-white border-warning rounded-0"
+                  style={{ width: 140 }}
+                  placeholder="Name"
+                  value={form.itemType}
                   onChange={e => setForm(p => ({ ...p, itemType: e.target.value }))}
                   required
-                >
-                  <option value="" className="bg-dark text-white">Select Type</option>
-                  <option value="Hotel" className="bg-dark text-white">Hotel</option>
-                  <option value="Flight" className="bg-dark text-white">Flight</option>
-                  <option value="Transport" className="bg-dark text-white">Transport</option>
-                </select>
+                />
                 <textarea 
                   className="form-control form-control-sm bg-dark text-white border-warning rounded-0" 
                   style={{ width: 180 }} 
@@ -431,6 +474,19 @@ function PartnerInventoryRow({ partnerId }) {
                   onChange={e => setForm(p => ({ ...p, availability: e.target.value }))} 
                   required 
                 />
+                <select
+                  className="form-select form-select-sm bg-dark text-white border-warning rounded-0"
+                  style={{ width: 140 }}
+                  value={form.status}
+                  onChange={e => setForm(p => ({ ...p, status: Number(e.target.value) }))}
+                  required
+                >
+                  {INVENTORY_STATUSES.map(s => (
+                    <option key={s.value} value={s.value} className="bg-dark text-white">
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
                 <button type="submit" className="btn btn-warning btn-sm rounded-0 font-monospace">Update</button>
                 <button type="button" className="btn btn-secondary btn-sm rounded-0 font-monospace" onClick={() => { setShowEdit(false); setEditItem(null) }}>Cancel</button>
               </form>

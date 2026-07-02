@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 
-const API_BASE = import.meta.env.VITE_API_BASE || import.meta.env.REACT_APP_API_BASE || 'http://localhost:5043/api/v1'
+const API_BASE = import.meta.env.VITE_API_BASE || import.meta.env.REACT_APP_API_BASE || '/api/v1'
 
 const api = axios.create({
   baseURL: API_BASE,

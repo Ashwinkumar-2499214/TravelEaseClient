@@ -111,47 +111,69 @@ export default function ItinerariesManager() {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="mb-0">Itineraries</h5>
-        <button className="btn btn-primary btn-sm" onClick={openCreate}>
-          <i className="fa-solid fa-plus me-1" />New Itinerary
-        </button>
+      <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
+        <div>
+          <h5 className="text-white font-monospace text-uppercase mb-1">Itineraries</h5>
+          <small className="text-light font-monospace">Travel Planning System</small>
+        </div>
+        <div className="d-flex align-items-center gap-3">
+          <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+          <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
+            <i className="fa-solid fa-plus me-2" />New Itinerary
+          </button>
+        </div>
       </div>
       <div className="table-responsive">
-        <table className="table table-hover table-bordered align-middle">
-          <thead className="table-dark">
-            <tr><th>Title</th><th>Start</th><th>End</th><th>Status</th><th>Change Status</th><th>Actions</th></tr>
+        <table className="table table-dark table-hover align-middle rounded-0 border-secondary">
+          <thead className="bg-info text-dark">
+            <tr>
+              <th className="font-monospace text-uppercase small border-secondary">Title</th>
+              <th className="font-monospace text-uppercase small border-secondary">Start</th>
+              <th className="font-monospace text-uppercase small border-secondary">End</th>
+              <th className="font-monospace text-uppercase small border-secondary">Status</th>
+              <th className="font-monospace text-uppercase small border-secondary">Change Status</th>
+              <th className="font-monospace text-uppercase small border-secondary">Actions</th>
+            </tr>
           </thead>
           <tbody>
             {itins.map(i => (
               <React.Fragment key={i.id}>
-                <tr>
-                  <td>
-                    <button className="btn btn-link btn-sm p-0 me-2 text-decoration-none" onClick={() => setExpandedId(expandedId === i.id ? null : i.id)}>
+                <tr className="border-secondary bg-dark">
+                  <td className="text-muted font-monospace border-secondary bg-darker">
+                    <button className="btn btn-link btn-sm p-0 me-2 text-info text-decoration-none" onClick={() => setExpandedId(expandedId === i.id ? null : i.id)}>
                       <i className={`fa-solid ${expandedId === i.id ? 'fa-chevron-down' : 'fa-chevron-right'}`} />
                     </button>
-                    {i.title || i.id}
+                    <span className="text-secondary">{i.title || i.id}</span>
                   </td>
-                  <td>{formatDate(i.startDate)}</td>
-                  <td>{formatDate(i.endDate)}</td>
-                  <td>{statusBadge(i.status)}</td>
-                  <td>
-                    <select className="form-select form-select-sm" style={{ width: 130 }} value={i.status}
+                  <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(i.startDate)}</td>
+                  <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(i.endDate)}</td>
+                  <td className="border-secondary bg-darker">{statusBadge(i.status)}</td>
+                  <td className="border-secondary bg-darker">
+                    <select className="form-select form-select-sm bg-dark text-white border-secondary rounded-0" style={{ width: 130 }} value={i.status}
                       onChange={e => handleStatus(i.id, e.target.value)}>
-                      {STATUSES.map(s => <option key={s}>{s}</option>)}
+                      {STATUSES.map(s => <option key={s} className="bg-dark text-white">{s}</option>)}
                     </select>
                   </td>
-                  <td>
-                    <button className="btn btn-sm btn-outline-secondary me-1" title="Export" onClick={() => handleExport(i.id)}><i className="fa-solid fa-download" /></button>
-                    <button className="btn btn-sm btn-outline-info me-1" title="Share" onClick={() => { setShareModal(i.id); setShareEmail('') }}><i className="fa-solid fa-share-nodes" /></button>
-                    <button className="btn btn-sm btn-outline-primary me-1" onClick={() => openEdit(i)}><i className="fa-solid fa-pen" /></button>
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(i.id)}><i className="fa-solid fa-trash" /></button>
+                  <td className="border-secondary bg-darker">
+                    <div className="btn-group btn-group-sm">
+                      <button className="btn btn-outline-secondary rounded-0" title="Export" onClick={() => handleExport(i.id)}><i className="fa-solid fa-download" /></button>
+                      <button className="btn btn-outline-warning rounded-0" title="Share" onClick={() => { setShareModal(i.id); setShareEmail('') }}><i className="fa-solid fa-share-nodes" /></button>
+                      <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(i)}><i className="fa-solid fa-pen" /></button>
+                      <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(i.id)}><i className="fa-solid fa-trash" /></button>
+                    </div>
                   </td>
                 </tr>
                 {expandedId === i.id && <ItineraryBookingsRow itineraryId={i.id} />}
               </React.Fragment>
             ))}
-            {itins.length === 0 && <tr><td colSpan={6} className="text-center text-muted">No itineraries found.</td></tr>}
+            {itins.length === 0 && (
+              <tr>
+                <td colSpan={6} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                  <i className="fa-solid fa-map me-2"></i>
+                  <span className="font-monospace">No itineraries found in system registry.</span>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -273,23 +295,53 @@ function ItineraryBookingsRow({ itineraryId }) {
   }
 
   return (
-    <tr className="table-light">
-      <td colSpan={6} className="ps-5">
-        <strong className="d-block mb-2">Linked Bookings</strong>
-        {loading ? <div className="spinner-border spinner-border-sm" /> : (
+    <tr className="bg-secondary bg-opacity-25 border-secondary">
+      <td colSpan={6} className="ps-5 border-secondary">
+        <div className="d-flex align-items-center mb-3">
+          <i className="fa-solid fa-link text-info me-2"></i>
+          <strong className="text-white font-monospace text-uppercase">Linked Bookings</strong>
+          <div className="ms-auto spinner-grow spinner-grow-sm text-info" role="status"></div>
+        </div>
+        {loading ? (
+          <div className="d-flex align-items-center text-light font-monospace">
+            <div className="spinner-border spinner-border-sm me-2" />
+            <span>Loading linked bookings...</span>
+          </div>
+        ) : (
           <>
-            <ul className="list-group list-group-flush mb-2">
-              {bookings.map(b => (
-                <li key={b.id} className="list-group-item d-flex justify-content-between align-items-center py-1">
-                  <span>{b.reference || b.id} — <span className="text-muted small">{b.status}</span></span>
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => removeBooking(b.id)}><i className="fa-solid fa-minus" /></button>
-                </li>
-              ))}
-              {bookings.length === 0 && <li className="list-group-item text-muted">No linked bookings.</li>}
-            </ul>
+            <div className="table-responsive">
+              <table className="table table-dark table-sm rounded-0 border-secondary">
+                <thead className="bg-info text-dark">
+                  <tr>
+                    <th className="font-monospace text-uppercase small border-secondary">Item Type</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Status</th>
+                    <th className="font-monospace text-uppercase small border-secondary">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.map(b => (
+                    <tr key={b.id} className="border-secondary bg-dark">
+                      <td className="text-secondary font-monospace border-secondary bg-darker">{b.itemType || b.reference || '-'}</td>
+                      <td className="border-secondary bg-darker"><span className="badge bg-info text-dark font-monospace">{b.status}</span></td>
+                      <td className="border-secondary bg-darker">
+                        <button className="btn btn-outline-danger btn-sm rounded-0" onClick={() => removeBooking(b.id)}><i className="fa-solid fa-minus" /></button>
+                      </td>
+                    </tr>
+                  ))}
+                  {bookings.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                        <i className="fa-solid fa-clipboard me-2"></i>
+                        <span className="font-monospace">No linked bookings on record.</span>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
             <form onSubmit={addBooking} className="d-flex gap-2 mt-2 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
               <input className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" style={{ width: 220 }} placeholder="Booking ID to link" value={bookingId} onChange={e => setBookingId(e.target.value)} required />
-              <button type="submit" className="btn btn-info btn-sm rounded-0 font-monospace">Link</button>
+              <button type="submit" className="btn btn-outline-info btn-sm rounded-0 font-monospace">Link</button>
             </form>
           </>
         )}

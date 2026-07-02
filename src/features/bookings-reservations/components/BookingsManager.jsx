@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react'
 import bookingsService from '../services/bookingsService'
+import inventoryService from '../../partners-inventory/services/inventoryService'
 import { formatDate } from '../../../utils/date'
 import { useAuth } from '../../authentication/AuthProvider'
 
-const STATUSES = ['Pending', 'Confirmed', 'Cancelled', 'Completed']
-const EMPTY = { userId: '', partnerId: '', inventoryId: '', itemType: 'Hotel', bookingDate: '', status: 'Pending' }
+const STATUS_MAP = { 1: 'Pending', 2: 'Confirmed', 3: 'Cancelled', 4: 'Completed' }
+const STATUS_REVERSE = { Pending: 1, Confirmed: 2, Cancelled: 3, Completed: 4 }
+const STATUSES = [1, 2, 3, 4]
+const EMPTY = { inventoryId: '', bookingDate: '', status: 1 }
 
 export default function BookingsManager({ agentMode = false }) {
   const { currentUser } = useAuth()
   const isAdminOrFinance = ['Admin', 'FinanceOfficer'].includes(currentUser?.role)
 
   const [bookings, setBookings] = useState([])
+  const [inventory, setInventory] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showModal, setShowModal] = useState(false)
@@ -29,18 +33,19 @@ export default function BookingsManager({ agentMode = false }) {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { if (currentUser) load() }, [currentUser])
+  useEffect(() => {
+    if (currentUser) {
+      load()
+      inventoryService.listAll().then(data => setInventory(Array.isArray(data) ? data : [])).catch(() => {})
+    }
+  }, [currentUser])
 
   const openCreate = () => { setEditBooking(null); setForm(EMPTY); setShowModal(true) }
   const openEdit = (b) => {
     setEditBooking(b)
     setForm({ 
-      userId: b.userId || '', 
-      partnerId: b.partnerId || '', 
       inventoryId: b.inventoryId || '', 
-      itemType: b.itemType || 'Hotel', 
       bookingDate: b.bookingDate?.slice(0, 16) || '', 
-      amount: b.amount || '', 
       status: b.status || 'Pending' 
     })
     setShowModal(true)
@@ -49,11 +54,12 @@ export default function BookingsManager({ agentMode = false }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
+      const selectedItem = inventory.find(i => i.inventoryId === Number(form.inventoryId) || i.id === Number(form.inventoryId))
       const payload = {
-        userId: Number(form.userId),
-        partnerId: Number(form.partnerId), 
+        userId: currentUser.id,
+        partnerId: selectedItem?.partnerId,
         inventoryId: Number(form.inventoryId),
-        itemType: form.itemType,
+        itemType: selectedItem?.itemType || selectedItem?.type,
         bookingDate: new Date(form.bookingDate).toISOString(),
         status: form.status
       }
@@ -74,8 +80,9 @@ export default function BookingsManager({ agentMode = false }) {
   }
 
   const statusBadge = (s) => {
+    const label = STATUS_MAP[Number(s)] || s
     const map = { Confirmed: 'bg-success', Pending: 'bg-warning text-dark', Cancelled: 'bg-danger', Completed: 'bg-info' }
-    return <span className={`badge ${map[s] || 'bg-secondary'}`}>{s}</span>
+    return <span className={`badge ${map[label] || 'bg-secondary'}`}>{label}</span>
   }
 
   if (loading) return <div className="text-center py-4"><div className="spinner-border" /></div>
@@ -99,8 +106,9 @@ export default function BookingsManager({ agentMode = false }) {
         <table className="table table-dark table-hover align-middle rounded-0 border-secondary">
           <thead className="bg-info text-dark">
             <tr>
-              <th className="font-monospace text-uppercase small border-secondary">Reference</th>
-              <th className="font-monospace text-uppercase small border-secondary">Start</th>
+              <th className="font-monospace text-uppercase small border-secondary">Item Type</th>
+              <th className="font-monospace text-uppercase small border-secondary">Booking Date</th>
+              <th className="font-monospace text-uppercase small border-secondary">Amount</th>
               <th className="font-monospace text-uppercase small border-secondary">Status</th>
               <th className="font-monospace text-uppercase small border-secondary">Change Status</th>
               <th className="font-monospace text-uppercase small border-secondary">Actions</th>
@@ -116,14 +124,15 @@ export default function BookingsManager({ agentMode = false }) {
                     <button className="btn btn-link btn-sm p-0 me-2 text-info text-decoration-none" onClick={() => setExpandedId(expandedId === bid ? null : bid)}>
                       <i className={`fa-solid ${expandedId === bid ? 'fa-chevron-down' : 'fa-chevron-right'}`} />
                     </button>
-                    <span className="text-secondary">{b.reference || bid}</span>
+                    <span className="text-secondary">{b.itemType || '-'}</span>
                   </td>
-                  <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(b.startDate || b.bookingDate)}</td>
+                  <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(b.bookingDate)}</td>
+                  <td className="text-secondary font-monospace border-secondary bg-darker">${Number(b.amount || 0).toFixed(2)}</td>
                   <td className="border-secondary bg-darker">{statusBadge(b.status)}</td>
                   <td className="border-secondary bg-darker">
-                    <select className="form-select form-select-sm bg-dark text-secondary border-secondary rounded-0" style={{ width: 130 }} value={b.status || ''}
-                      onChange={e => handleStatus(bid, e.target.value)}>
-                      {STATUSES.map(s => <option key={s} value={s} className="bg-dark text-secondary">{s}</option>)}
+                    <select className="form-select form-select-sm bg-dark text-secondary border-secondary rounded-0" style={{ width: 130 }} value={Number(b.status) || 1}
+                      onChange={e => handleStatus(bid, Number(e.target.value))}>
+                      {STATUSES.map(s => <option key={s} value={s} className="bg-dark text-secondary">{STATUS_MAP[s]}</option>)}
                     </select>
                   </td>
                   <td className="border-secondary bg-darker">
@@ -133,12 +142,12 @@ export default function BookingsManager({ agentMode = false }) {
                     </div>
                   </td>
                 </tr>
-                {expandedId === bid && <ReservationsRow bookingId={bid} />}
+                {expandedId === bid && <ReservationsRow bookingId={bid} booking={b} />}
               </React.Fragment>
             )})}
             {bookings.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                <td colSpan={6} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
                   <i className="fa-solid fa-database me-2"></i>
                   <span className="font-monospace">No bookings found in system registry.</span>
                 </td>
@@ -164,26 +173,18 @@ export default function BookingsManager({ agentMode = false }) {
               </div>
               <div className="modal-body bg-dark">
                 <div className="d-flex flex-column gap-3">
-                  {agentMode && (
-                    <div>
-                      <label className="form-label text-white font-monospace text-uppercase small">User ID</label>
-                      <input type="number" className="form-control bg-dark text-white border-secondary rounded-0" value={form.userId} onChange={e => setForm(p => ({ ...p, userId: e.target.value }))} required />
-                    </div>
-                  )}
                   <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Partner ID</label>
-                    <input type="number" className="form-control bg-dark text-white border-secondary rounded-0" value={form.partnerId} onChange={e => setForm(p => ({ ...p, partnerId: e.target.value }))} required />
-                  </div>
-                  <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Inventory ID</label>
-                    <input type="number" className="form-control bg-dark text-white border-secondary rounded-0" value={form.inventoryId} onChange={e => setForm(p => ({ ...p, inventoryId: e.target.value }))} required />
-                  </div>
-                  <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Item Type</label>
-                    <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.itemType} onChange={e => setForm(p => ({ ...p, itemType: e.target.value }))} required>
-                      <option value="Hotel" className="bg-dark text-white">Hotel</option>
-                      <option value="Flight" className="bg-dark text-white">Flight</option>
-                      <option value="Transport" className="bg-dark text-white">Transport</option>
+                    <label className="form-label text-white font-monospace text-uppercase small">Select Inventory Item</label>
+                    <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.inventoryId} onChange={e => setForm(p => ({ ...p, inventoryId: e.target.value }))} required>
+                      <option value="" className="bg-dark text-white">-- Select an item --</option>
+                      {inventory.map(item => {
+                        const id = item.inventoryId ?? item.id
+                        return (
+                          <option key={id} value={id} className="bg-dark text-white">
+                            [{item.itemType || item.type}] {item.name || item.title || `Item #${id}`}
+                          </option>
+                        )
+                      })}
                     </select>
                   </div>
                   <div>
@@ -192,8 +193,8 @@ export default function BookingsManager({ agentMode = false }) {
                   </div>
                   <div>
                     <label className="form-label text-white font-monospace text-uppercase small">Status</label>
-                    <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))}>
-                      {STATUSES.map(s => <option key={s} value={s} className="bg-dark text-white">{s}</option>)}
+                    <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.status} onChange={e => setForm(p => ({ ...p, status: Number(e.target.value) }))}>
+                      {STATUSES.map(s => <option key={s} value={s} className="bg-dark text-white">{STATUS_MAP[s]}</option>)}
                     </select>
                   </div>
                 </div>
@@ -212,7 +213,7 @@ export default function BookingsManager({ agentMode = false }) {
   )
 }
 
-function ReservationsRow({ bookingId }) {
+function ReservationsRow({ bookingId, booking }) {
   const [reservations, setReservations] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
@@ -253,7 +254,6 @@ function ReservationsRow({ bookingId }) {
               <table className="table table-dark table-sm rounded-0 border-secondary">
                 <thead className="bg-info text-dark">
                   <tr>
-                    <th className="font-monospace text-uppercase small border-secondary">ID</th>
                     <th className="font-monospace text-uppercase small border-secondary">Seat</th>
                     <th className="font-monospace text-uppercase small border-secondary">Status</th>
                     <th className="font-monospace text-uppercase small border-secondary">Change Status</th>
@@ -262,7 +262,6 @@ function ReservationsRow({ bookingId }) {
                 <tbody>
                   {reservations.map(r => (
                     <tr key={r.id} className="border-secondary bg-dark">
-                      <td className="text-secondary font-monospace border-secondary bg-darker">{r.id}</td>
                       <td className="text-secondary font-monospace border-secondary bg-darker">{r.seatNumber || '-'}</td>
                       <td className="border-secondary bg-darker"><span className="badge bg-info text-dark font-monospace">{r.status}</span></td>
                       <td className="border-secondary bg-darker">

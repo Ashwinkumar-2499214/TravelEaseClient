@@ -14,7 +14,7 @@ const inventoryService = {
     }).then(unwrap),
 
   getById: (id) => api.get(`/inventory/${id}`).then(unwrap),
-  updateAvailability: (id, payload) => api.patch(`/inventory/${id}/availability`, payload).then(unwrap),
+  patchStatus: (id, status) => api.patch(`/inventory/${id}/availability`, { status }).then(unwrap),
 }
 
 export default inventoryService

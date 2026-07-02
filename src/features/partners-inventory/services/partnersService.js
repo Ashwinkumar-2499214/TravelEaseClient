@@ -31,7 +31,7 @@ const partnersService = {
   },
   
   patchStatus: (id, status) => {
-    return api.patch(`/partners/${id}/status`, { status }).then(unwrap)
+    return api.patch(`/partners/${id}/status`, { status: Number(status) }).then(unwrap)
   },
   
   listInventory: (partnerId) => {
@@ -60,8 +60,8 @@ const partnersService = {
   },
   
   patchInventoryStatus: (partnerId, inventoryId, status) => {
-    const url = `/partners/${partnerId}/inventory/${inventoryId}/status`
-    
+    const url = `/partners/${partnerId}/status`
+
     return api.patch(url, { status }).then(unwrap)
   },
 }

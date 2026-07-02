@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import inventoryService from '../services/inventoryService'
 import bookingsService from '../../bookings-reservations/services/bookingsService'
+import { useAuth } from '../../authentication/AuthProvider'
 
 export default function InventorySearch() {
   const [items, setItems] = useState([])
@@ -31,11 +32,24 @@ export default function InventorySearch() {
     ))
   }, [search, items])
 
+  const { currentUser } = useAuth()
+
   const handleBook = async (e) => {
     e.preventDefault()
     setBooking(true)
     try {
-      await bookingsService.create({ inventoryId: bookingItem.inventoryId, ...bookForm })
+      await bookingsService.create({
+        userId: currentUser?.id,
+        partnerId: bookingItem.partnerId,
+        inventoryId: bookingItem.inventoryId,
+        itemType: bookingItem.itemType,
+        bookingDate: new Date(bookForm.startDate).toISOString(),
+        status: 1,
+        amount: bookingItem.price,
+        notes: bookForm.notes,
+        startDate: bookForm.startDate,
+        endDate: bookForm.endDate,
+      })
       alert('Booking created successfully!')
       setBookingItem(null)
     } catch (err) { 
@@ -62,7 +76,7 @@ export default function InventorySearch() {
       </div>
       <div className="row g-3">
         {filtered.map(item => {
-          const isAvailable = item.status === 1; 
+          const isAvailable = Number(item.status) === 1; 
 
           return (
             <div className="col-md-4" key={item.inventoryId}>

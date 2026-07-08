@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useAuth } from '../../authentication/AuthProvider'
 import partnersService from '../services/partnersService'
 import inventoryService from '../services/inventoryService'
 
@@ -10,7 +11,10 @@ const getStatusLabel = (val) => PARTNER_STATUSES.find(s => s.value === Number(va
 
 const EMPTY = { name: '', type: '', status: 1, contactEmail: '', contactPhone: '', address: '' }
 
-export default function PartnersManager() {
+export default function PartnersManager({ agentMode = false }) {
+  const { currentUser } = useAuth()
+  const isAdmin = currentUser?.role === 'Admin'
+  const hideActions = isAdmin && !agentMode
   const [partners, setPartners] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -87,12 +91,17 @@ export default function PartnersManager() {
           <h5 className="text-white font-monospace text-uppercase mb-1">Partners Registry</h5>
           <small className="text-light font-monospace">Vendor Management System</small>
         </div>
-        <div className="d-flex align-items-center gap-3">
+        {!hideActions && (
+          <div className="d-flex align-items-center gap-3">
+            <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+            <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
+              <i className="fa-solid fa-plus me-2" />Add Partner
+            </button>
+          </div>
+        )}
+        {hideActions && (
           <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
-          <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
-            <i className="fa-solid fa-plus me-2" />Add Partner
-          </button>
-        </div>
+        )}
       </div>
 
       <form onSubmit={handleSearchSubmit} className="d-flex gap-2 mb-4 p-2 bg-secondary bg-opacity-10 border-secondary rounded-0">
@@ -124,7 +133,7 @@ export default function PartnersManager() {
               <th className="font-monospace text-uppercase small border-secondary">Contact Email</th>
               <th className="font-monospace text-uppercase small border-secondary">Contact Phone</th>
               <th className="font-monospace text-uppercase small border-secondary">Status</th>
-              <th className="font-monospace text-uppercase small border-secondary">Actions</th>
+              {!hideActions && <th className="font-monospace text-uppercase small border-secondary">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -141,22 +150,24 @@ export default function PartnersManager() {
                   <td className="text-secondary font-monospace border-secondary bg-darker">{p.contactEmail}</td>
                   <td className="text-secondary font-monospace border-secondary bg-darker">{p.contactPhone}</td>
                   <td className="border-secondary bg-darker"><span className={`badge ${getStatusLabel(p.status) === 'Active' ? 'bg-success' : 'bg-secondary'} font-monospace`}>{getStatusLabel(p.status)}</span></td>
-                  <td className="border-secondary bg-darker">
-                    <div className="btn-group btn-group-sm">
-                      <button className="btn btn-outline-warning rounded-0" onClick={() => toggleStatus(p)} title="Toggle status"><i className="fa-solid fa-toggle-on" /></button>
-                      <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(p)}><i className="fa-solid fa-pen" /></button>
-                      <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(p.id || p.PartnerId || p.partnerId || p._id)}><i className="fa-solid fa-trash" /></button>
-                    </div>
-                  </td>
+                  {!hideActions && (
+                    <td className="border-secondary bg-darker">
+                      <div className="btn-group btn-group-sm">
+                        <button className="btn btn-outline-warning rounded-0" onClick={() => toggleStatus(p)} title="Toggle status"><i className="fa-solid fa-toggle-on" /></button>
+                        <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(p)}><i className="fa-solid fa-pen" /></button>
+                        <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(p.id || p.PartnerId || p.partnerId || p._id)}><i className="fa-solid fa-trash" /></button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
                 {expandedId === (p.id || p.PartnerId || p.partnerId || p._id) && (
-                  <PartnerInventoryRow partnerId={p.id || p.PartnerId || p.partnerId || p._id} />
+                  <PartnerInventoryRow partnerId={p.id || p.PartnerId || p.partnerId || p._id} isAdmin={hideActions} />
                 )}
               </React.Fragment>
             ))}
             {partners.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                <td colSpan={!hideActions ? 6 : 5} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
                   <i className="fa-solid fa-handshake me-2"></i>
                   <span className="font-monospace">No partners found in registry.</span>
                 </td>
@@ -221,7 +232,7 @@ export default function PartnersManager() {
   )
 }
 
-function PartnerInventoryRow({ partnerId }) {
+function PartnerInventoryRow({ partnerId, isAdmin: hideActions }) {
   const [inventory, setInventory] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
@@ -335,7 +346,7 @@ function PartnerInventoryRow({ partnerId }) {
                     <th className="font-monospace text-uppercase small border-secondary">Price</th>
                     <th className="font-monospace text-uppercase small border-secondary">Availability</th>
                     <th className="font-monospace text-uppercase small border-secondary">Status</th>
-                    <th className="font-monospace text-uppercase small border-secondary">Actions</th>
+                    {!hideActions && <th className="font-monospace text-uppercase small border-secondary">Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -360,19 +371,21 @@ function PartnerInventoryRow({ partnerId }) {
                             ))}
                           </select>
                         </td>
-                        <td className="border-secondary bg-darker">
-                          <div className="btn-group btn-group-sm">
-                            <button className="btn btn-outline-warning rounded-0" onClick={() => openEditItem(i)} title="Edit">
-                              <i className="fa-solid fa-pen" />
-                            </button>
-                            <button className="btn btn-outline-secondary rounded-0" onClick={() => handleOpenMediaManager(i)} title="Media">
-                              <i className="fa-solid fa-images" />
-                            </button>
-                            <button className="btn btn-outline-danger rounded-0" onClick={() => handleDeleteItem(i.inventoryId)} title="Delete">
-                              <i className="fa-solid fa-trash" />
-                            </button>
-                          </div>
-                        </td>
+                        {!hideActions && (
+                          <td className="border-secondary bg-darker">
+                            <div className="btn-group btn-group-sm">
+                              <button className="btn btn-outline-warning rounded-0" onClick={() => openEditItem(i)} title="Edit">
+                                <i className="fa-solid fa-pen" />
+                              </button>
+                              <button className="btn btn-outline-secondary rounded-0" onClick={() => handleOpenMediaManager(i)} title="Media">
+                                <i className="fa-solid fa-images" />
+                              </button>
+                              <button className="btn btn-outline-danger rounded-0" onClick={() => handleDeleteItem(i.inventoryId)} title="Delete">
+                                <i className="fa-solid fa-trash" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                       {mediaManager.showMedia && mediaManager.itemId === i.inventoryId && (
                         <InventoryMediaManager partnerId={partnerId} inventoryId={i.inventoryId} onClose={() => setMediaManager({ showMedia: false, itemId: null })} onUpdated={loadInv} />
@@ -381,7 +394,7 @@ function PartnerInventoryRow({ partnerId }) {
                   ))}
                   {inventory.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                      <td colSpan={!hideActions ? 6 : 5} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
                         <i className="fa-solid fa-warehouse me-2"></i>
                         <span className="font-monospace">No inventory items on record.</span>
                       </td>
@@ -391,9 +404,11 @@ function PartnerInventoryRow({ partnerId }) {
               </table>
             </div>
             {!showAdd && !showEdit ? (
-              <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase mt-2" onClick={() => setShowAdd(true)}>
-                <i className="fa-solid fa-plus me-2" />Add Item
-              </button>
+              !hideActions && (
+                <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase mt-2" onClick={() => setShowAdd(true)}>
+                  <i className="fa-solid fa-plus me-2" />Add Item
+                </button>
+              )
             ) : showAdd ? (
               <form onSubmit={addItem} className="d-flex gap-2 flex-wrap mt-2 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
                 <input

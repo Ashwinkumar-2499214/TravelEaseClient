@@ -7,7 +7,7 @@ import ItinerariesManager from '../../features/itineraries/components/Itinerarie
 import InvoicesManager from '../../features/billing-payments/components/InvoicesManager'
 import ComplianceManager from '../../features/billing-payments/components/ComplianceManager'
 import AnalyticsDashboard from '../../features/analytics-reporting/components/AnalyticsDashboard'
-import NotificationsPanel from '../../features/notifications/components/NotificationsPanel'
+import NotificationsPage from '../NotificationsPage'
 
 const NAV = [
   ['overview', 'Overview'],
@@ -42,7 +42,7 @@ export default function AdminDashboard() {
         <Route path="invoices" element={<InvoicesManager />} />
         <Route path="compliance" element={<ComplianceManager />} />
         <Route path="analytics/*" element={<AnalyticsDashboard />} />
-        <Route path="notifications" element={<NotificationsPanel />} />
+        <Route path="notifications" element={<NotificationsPage />} />
       </Routes>
     </div>
   )
@@ -59,6 +59,7 @@ function AdminOverview() {
         { label: 'Invoices', desc: 'Central billing registry', icon: 'fa-solid fa-file-invoice-dollar', path: '/dashboard/invoices', color: 'danger' },
         { label: 'Compliance', desc: 'Audit logs and policies', icon: 'fa-solid fa-shield-halved', path: '/dashboard/compliance', color: 'dark' },
         { label: 'Analytics', desc: 'System-wide KPI & trends', icon: 'fa-solid fa-chart-line', path: '/dashboard/analytics', color: 'secondary' },
+        { label: 'Notifications', desc: 'System notifications & alerts', icon: 'fa-solid fa-bell', path: '/dashboard/notifications', color: 'warning' },
       ].map(card => (
         <div className="col-md-4" key={card.path}>
           <NavLink to={card.path} className="text-decoration-none">

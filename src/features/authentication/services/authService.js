@@ -13,6 +13,9 @@ const authService = {
   resetPassword: async (payload) => {
     return api.post('/auth/reset-password', payload)
   },
+  forgotPassword: async (payload) => {
+    return api.post('/auth/forgot-password', payload)
+  },
   getUsers: (searchTerm = '') => {
 
     const params = { 

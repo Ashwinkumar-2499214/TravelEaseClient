@@ -3,7 +3,7 @@ import { Routes, Route, NavLink } from 'react-router-dom'
 import BookingsManager from '../../features/bookings-reservations/components/BookingsManager'
 import InventorySearch from '../../features/partners-inventory/components/InventorySearch'
 import ItinerariesManager from '../../features/itineraries/components/ItinerariesManager'
-import NotificationsPanel from '../../features/notifications/components/NotificationsPanel'
+import NotificationsPage from '../NotificationsPage'
 
 export default function AgentDashboard() {
   return (
@@ -28,7 +28,7 @@ export default function AgentDashboard() {
         <Route path="inventory" element={<InventorySearch />} />
         <Route path="bookings" element={<BookingsManager agentMode={true} />} />
         <Route path="itineraries" element={<ItinerariesManager />} />
-        <Route path="notifications" element={<NotificationsPanel />} />
+        <Route path="notifications" element={<NotificationsPage />} />
       </Routes>
     </div>
   )

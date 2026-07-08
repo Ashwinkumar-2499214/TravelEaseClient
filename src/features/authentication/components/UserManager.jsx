@@ -50,10 +50,6 @@ export default function UserManager() {
       const role = Number(form.role) || 1
       if (editUser) {
         await authService.updateUser(editUser.userId, { name: form.name, email: form.email, phone: form.phone, role })
-        const currentRole = ROLES.find(r => r.label === editUser.role)?.value
-        if (role !== currentRole) {
-          await authService.updateRoles(editUser.userId, role)
-        }
       } else {
         await authService.registerUser({
           name: form.name,

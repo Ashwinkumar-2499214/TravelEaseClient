@@ -13,8 +13,24 @@ const inventoryService = {
       } 
     }).then(unwrap),
 
+  getByPartner: (partnerId) =>
+    api.get(`/inventory?ItemType=a`).then(unwrap),
+
   getById: (id) => api.get(`/inventory/${id}`).then(unwrap),
-  patchStatus: (id, status) => api.patch(`/inventory/${id}/availability`, { status }).then(unwrap),
+
+  patchStatus: (id, newAvailability, status) => 
+    api.patch(`/inventory/${id}/availability`, { 
+      newAvailability: newAvailability, 
+      status: status 
+    }).then(unwrap),
+
+  uploadMedia: (partnerId, inventoryId, file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post(`/partners/${partnerId}/inventory/${inventoryId}/media`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(unwrap)
+  },
 }
 
 export default inventoryService

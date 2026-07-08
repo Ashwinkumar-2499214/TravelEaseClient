@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import partnersService from '../services/partnersService'
+import inventoryService from '../services/inventoryService'
 
 const PARTNER_TYPES = [{ value: 1, label: 'Hotel' }, { value: 2, label: 'Transport Provider' }, { value: 3, label: 'Tour Operator' }]
 const PARTNER_STATUSES = [{ value: 1, label: 'Active' }, { value: 2, label: 'Inactive' }]
@@ -226,14 +227,15 @@ function PartnerInventoryRow({ partnerId }) {
   const [showAdd, setShowAdd] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [editItem, setEditItem] = useState(null)
-  const [form, setForm] = useState({ itemType: '', description: '', price: '', availability: '', status: 1 })
+  const [mediaManager, setMediaManager] = useState({ showMedia: false, itemId: null })
+  const [form, setForm] = useState({ itemType: '', description: '', price: '', availability: '', status: 'Available' })
 
   const INVENTORY_STATUSES = [
-    { value: 1, label: 'Available' },
-    { value: 2, label: 'Limited' },
-    { value: 3, label: 'Sold Out' },
-    { value: 4, label: 'Unavailable' },
-    { value: 5, label: 'Maintenance' },
+    { value: 'Available', label: 'Available' },
+    { value: 'Limited', label: 'Limited' },
+    { value: 'SoldOut', label: 'Sold Out' },
+    { value: 'Unavailable', label: 'Unavailable' },
+    { value: 'Maintenance', label: 'Maintenance' },
   ]
 
   const loadInv = () => {
@@ -253,7 +255,7 @@ function PartnerInventoryRow({ partnerId }) {
     }
     try {
       await partnersService.createInventory(partnerId, form)
-      setForm({ itemType: '', description: '', price: '', availability: '', status: 1 })
+      setForm({ itemType: '', description: '', price: '', availability: '', status: 'Available' })
       setShowAdd(false)
       loadInv()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
@@ -266,7 +268,7 @@ function PartnerInventoryRow({ partnerId }) {
       description: item.description || '',
       price: item.price || '',
       availability: item.availability || '',
-      status: item.status ?? 1,
+      status: item.status ?? 'Available',
     })
     setShowEdit(true)
   }
@@ -281,8 +283,7 @@ function PartnerInventoryRow({ partnerId }) {
       await partnersService.updateInventory(partnerId, editItem.inventoryId, form)
       setShowEdit(false)
       setEditItem(null)
-      setForm({ itemType: '', description: '', price: '', availability: '', status: 1 })
-      loadInv()
+      setForm({ itemType: '', description: '', price: '', availability: '', status: 'Available' })
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
 
@@ -295,14 +296,19 @@ function PartnerInventoryRow({ partnerId }) {
   }
 
   const handleStatusChange = async (inventoryId, newStatus) => {
+    const prev = inventory.find(i => i.inventoryId === inventoryId)
     setInventory(prev => prev.map(i => i.inventoryId === inventoryId ? { ...i, status: newStatus } : i))
     try {
-      await partnersService.patchInventoryStatus(partnerId, inventoryId, newStatus)
+      await partnersService.patchInventoryStatus(partnerId, inventoryId, prev?.availability ?? 0, newStatus)
     } catch (err) {
-      setInventory(prev => prev.map(i => i.inventoryId === inventoryId ? { ...i, status: i.status } : i))
+      setInventory(prev => prev.map(i => i.inventoryId === inventoryId ? { ...i, status: prev?.status } : i))
       alert(err?.response?.data?.message || err.message)
       loadInv()
     }
+  }
+
+  const handleOpenMediaManager = (item) => {
+    setMediaManager({ showMedia: true, itemId: item.inventoryId })
   }
 
   return (
@@ -334,36 +340,44 @@ function PartnerInventoryRow({ partnerId }) {
                 </thead>
                 <tbody>
                   {inventory.map(i => (
-                    <tr key={i.inventoryId} className="border-secondary bg-dark">
-                      <td className="text-secondary font-monospace border-secondary bg-darker">{i.itemType}</td>
-                      <td className="text-secondary font-monospace border-secondary bg-darker">{i.description}</td>
-                      <td className="text-secondary font-monospace border-secondary bg-darker">${i.price}</td>
-                      <td className="text-secondary font-monospace border-secondary bg-darker">{i.availability}</td>
-                      <td className="border-secondary bg-darker">
-                        <select 
-                          className="form-select form-select-sm bg-dark text-white border-secondary rounded-0" 
-                          style={{ width: 100 }} 
-                          value={i.status} 
-                          onChange={e => handleStatusChange(i.inventoryId, Number(e.target.value))}
-                        >
-                          {INVENTORY_STATUSES.map(s => (
-                            <option key={s.value} value={s.value} className="bg-dark text-white">
-                              {s.label}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="border-secondary bg-darker">
-                        <div className="btn-group btn-group-sm">
-                          <button className="btn btn-outline-info rounded-0" onClick={() => openEditItem(i)} title="Edit">
-                            <i className="fa-solid fa-pen" />
-                          </button>
-                          <button className="btn btn-outline-danger rounded-0" onClick={() => handleDeleteItem(i.inventoryId)} title="Delete">
-                            <i className="fa-solid fa-trash" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                    <React.Fragment key={i.inventoryId}>
+                      <tr className="border-secondary bg-dark">
+                        <td className="text-secondary font-monospace border-secondary bg-darker">{i.itemType}</td>
+                        <td className="text-secondary font-monospace border-secondary bg-darker">{i.description}</td>
+                        <td className="text-secondary font-monospace border-secondary bg-darker">${i.price}</td>
+                        <td className="text-secondary font-monospace border-secondary bg-darker">{i.availability}</td>
+                        <td className="border-secondary bg-darker">
+                          <select 
+                            className="form-select form-select-sm bg-dark text-white border-secondary rounded-0" 
+                            style={{ width: 100 }} 
+                            value={i.status} 
+                            onChange={e => handleStatusChange(i.inventoryId, e.target.value)}
+                          >
+                            {INVENTORY_STATUSES.map(s => (
+                              <option key={s.value} value={s.value} className="bg-dark text-white">
+                                {s.label}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="border-secondary bg-darker">
+                          <div className="btn-group btn-group-sm">
+                            <button className="btn btn-outline-warning rounded-0" onClick={() => openEditItem(i)} title="Edit">
+                              <i className="fa-solid fa-pen" />
+                            </button>
+                            <button className="btn btn-outline-secondary rounded-0" onClick={() => handleOpenMediaManager(i)} title="Media">
+                              <i className="fa-solid fa-images" />
+                            </button>
+                            <button className="btn btn-outline-danger rounded-0" onClick={() => handleDeleteItem(i.inventoryId)} title="Delete">
+                              <i className="fa-solid fa-trash" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {mediaManager.showMedia && mediaManager.itemId === i.inventoryId && (
+                        <InventoryMediaManager partnerId={partnerId} inventoryId={i.inventoryId} onClose={() => setMediaManager({ showMedia: false, itemId: null })} onUpdated={loadInv} />
+                      )}
+                    </React.Fragment>
                   ))}
                   {inventory.length === 0 && (
                     <tr>
@@ -423,7 +437,7 @@ function PartnerInventoryRow({ partnerId }) {
                   className="form-select form-select-sm bg-dark text-white border-secondary rounded-0"
                   style={{ width: 140 }}
                   value={form.status}
-                  onChange={e => setForm(p => ({ ...p, status: Number(e.target.value) }))}
+                  onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
                   required
                 >
                   {INVENTORY_STATUSES.map(s => (
@@ -478,7 +492,7 @@ function PartnerInventoryRow({ partnerId }) {
                   className="form-select form-select-sm bg-dark text-white border-warning rounded-0"
                   style={{ width: 140 }}
                   value={form.status}
-                  onChange={e => setForm(p => ({ ...p, status: Number(e.target.value) }))}
+                  onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
                   required
                 >
                   {INVENTORY_STATUSES.map(s => (
@@ -491,6 +505,143 @@ function PartnerInventoryRow({ partnerId }) {
                 <button type="button" className="btn btn-secondary btn-sm rounded-0 font-monospace" onClick={() => { setShowEdit(false); setEditItem(null) }}>Cancel</button>
               </form>
             )}
+          </>
+        )}
+      </td>
+    </tr>
+  )
+}
+
+function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
+  const [media, setMedia] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
+
+  const loadMedia = () => {
+    setLoading(true)
+    // Fetch media - the API returns inventory with media array
+    partnersService.listInventory(partnerId)
+      .then(items => {
+        const item = items.find(i => i.inventoryId === inventoryId)
+        setMedia(item?.media || [])
+      })
+      .catch(() => setMedia([]))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadMedia() }, [partnerId, inventoryId])
+
+  const handleUpload = async (e) => {
+    e.preventDefault()
+    if (!selectedFile) {
+      alert('Please select a file first')
+      return
+    }
+
+    setUploading(true)
+    try {
+      await inventoryService.uploadMedia(partnerId, inventoryId, selectedFile)
+      setSelectedFile(null)
+      alert('Media uploaded successfully!')
+      loadMedia()
+      onUpdated?.()
+    } catch (err) {
+      alert(err?.response?.data?.message || err.message || 'Failed to upload media')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDelete = async (mediaId) => {
+    if (!window.confirm('Delete this media?')) return
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/inventory/${inventoryId}/media/${mediaId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        }
+      )
+
+      if (!response.ok) throw new Error('Delete failed')
+      
+      alert('Media deleted successfully!')
+      loadMedia()
+      onUpdated?.()
+    } catch (err) {
+      alert(err.message || 'Failed to delete media')
+    }
+  }
+
+  return (
+    <tr className="bg-secondary bg-opacity-25 border-secondary">
+      <td colSpan={6} className="ps-5 border-secondary">
+        <div className="d-flex align-items-center mb-3">
+          <i className="fa-solid fa-images text-info me-2"></i>
+          <strong className="text-white font-monospace text-uppercase">Media Gallery</strong>
+          <div className="ms-auto">
+            <button className="btn btn-outline-secondary btn-sm rounded-0 font-monospace" onClick={onClose}>
+              <i className="fa-solid fa-times me-1"></i>Close
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="d-flex align-items-center text-light font-monospace">
+            <div className="spinner-border spinner-border-sm me-2" />
+            <span>Loading media...</span>
+          </div>
+        ) : (
+          <>
+            <div className="mb-3">
+              <form onSubmit={handleUpload} className="d-flex gap-2 p-3 bg-info bg-opacity-10 border-info rounded-0">
+                <input 
+                  type="file" 
+                  className="form-control form-control-sm bg-dark text-light border-info rounded-0"
+                  accept="image/*,video/*"
+                  onChange={e => setSelectedFile(e.target.files?.[0])}
+                  disabled={uploading}
+                />
+                <button type="submit" className="btn btn-info btn-sm rounded-0 font-monospace text-uppercase" disabled={uploading || !selectedFile}>
+                  {uploading ? <><span className="spinner-border spinner-border-sm me-2" role="status"></span>Uploading...</> : <><i className="fa-solid fa-upload me-1"></i>Upload</>}
+                </button>
+              </form>
+            </div>
+
+            <div className="row g-2">
+              {media.length > 0 ? media.map(m => (
+                <div key={m.mediaId} className="col-md-3">
+                  <div className="card bg-dark border-secondary">
+                    {m.mediaType === 'image' ? (
+                      <img src={`${import.meta.env.VITE_API_BASE_URL}${m.url}`} className="card-img-top" alt={m.fileName} style={{ maxHeight: 150, objectFit: 'cover' }} />
+                    ) : (
+                      <div className="bg-secondary d-flex align-items-center justify-content-center" style={{ height: 150 }}>
+                        <i className="fa-solid fa-video text-info" style={{ fontSize: '2rem' }}></i>
+                      </div>
+                    )}
+                    <div className="card-body p-2">
+                      <small className="text-light d-block text-truncate">{m.fileName}</small>
+                      <div className="btn-group btn-group-sm mt-2 w-100">
+                        <button 
+                          className="btn btn-outline-danger btn-sm rounded-0 w-100" 
+                          onClick={() => handleDelete(m.mediaId)}
+                          title="Delete"
+                        >
+                          <i className="fa-solid fa-trash me-1"></i>Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )) : (
+                <div className="col">
+                  <p className="text-muted text-center">No media uploaded yet</p>
+                </div>
+              )}
+            </div>
           </>
         )}
       </td>

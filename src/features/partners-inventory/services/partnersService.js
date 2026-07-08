@@ -59,10 +59,13 @@ const partnersService = {
     return api.delete(url).then(unwrap)
   },
   
-  patchInventoryStatus: (partnerId, inventoryId, status) => {
-    const url = `/partners/${partnerId}/status`
-
-    return api.patch(url, { status }).then(unwrap)
+  patchInventoryStatus: (partnerId, inventoryId, currentAvailability, newStatus) => {
+    const url = `/inventory/${inventoryId}/availability`
+    const payload = { 
+        availability: currentAvailability, 
+        status: newStatus 
+    }
+    return api.patch(url, payload).then(unwrap)
   },
 }
 

@@ -3,6 +3,41 @@ import inventoryService from '../services/inventoryService'
 import bookingsService from '../../bookings-reservations/services/bookingsService'
 import { useAuth } from '../../authentication/AuthProvider'
 
+const BASE = import.meta.env.VITE_API_BASE_URL
+
+function MediaSlideshow({ media }) {
+  const [idx, setIdx] = useState(0)
+  const prev = () => setIdx(i => (i - 1 + media.length) % media.length)
+  const next = () => setIdx(i => (i + 1) % media.length)
+  const m = media[idx]
+
+  return (
+    <div style={{ position: 'relative', height: 200, background: '#000' }}>
+      {m.mediaType === 'image' ? (
+        <img src={`${BASE}${m.url}`} alt={m.fileName} style={{ width: '100%', height: 200, objectFit: 'cover' }} />
+      ) : (
+        <div className="d-flex align-items-center justify-content-center bg-dark" style={{ height: 200 }}>
+          <div className="text-center">
+            <i className="fa-solid fa-video text-info" style={{ fontSize: '2rem' }} />
+            <p className="text-light mt-2 small">{m.fileName}</p>
+          </div>
+        </div>
+      )}
+      {media.length > 1 && (
+        <>
+          <button onClick={prev} style={{ position: 'absolute', top: '50%', left: 6, transform: 'translateY(-50%)', zIndex: 2 }} className="btn btn-dark btn-sm opacity-75 rounded-circle p-1" type="button">
+            <i className="fa-solid fa-chevron-left" />
+          </button>
+          <button onClick={next} style={{ position: 'absolute', top: '50%', right: 6, transform: 'translateY(-50%)', zIndex: 2 }} className="btn btn-dark btn-sm opacity-75 rounded-circle p-1" type="button">
+            <i className="fa-solid fa-chevron-right" />
+          </button>
+          <span style={{ position: 'absolute', bottom: 6, right: 8, zIndex: 2 }} className="badge bg-dark bg-opacity-75">{idx + 1} / {media.length}</span>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function InventorySearch() {
   const [items, setItems] = useState([])
   const [filtered, setFiltered] = useState([])
@@ -13,16 +48,20 @@ export default function InventorySearch() {
   const [bookForm, setBookForm] = useState({ startDate: '', endDate: '', notes: '' })
   const [booking, setBooking] = useState(false)
 
-  useEffect(() => {
-    inventoryService.listAll()
+  const load = () => {
+    setLoading(true)
+    setError(null)
+    inventoryService.getByPartner(1)
       .then(d => { 
-        const dataArray = d.data || d; 
-        setItems(dataArray); 
-        setFiltered(dataArray); 
+        const dataArray = d.data || d
+        setItems(dataArray)
+        setFiltered(dataArray)
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { load() }, [])
 
   useEffect(() => {
     const q = search.toLowerCase()
@@ -76,24 +115,49 @@ export default function InventorySearch() {
       </div>
       <div className="row g-3">
         {filtered.map(item => {
-          const isAvailable = Number(item.status) === 1; 
+          const bookableStatuses = ['Available', 'Limited']
+          const isBookable = bookableStatuses.includes(item.status)
+          const statusBadgeMap = {
+            Available: 'bg-success',
+            Limited: 'bg-warning text-dark',
+            SoldOut: 'bg-danger',
+            Unavailable: 'bg-secondary',
+            Maintenance: 'bg-dark border border-secondary',
+          }
 
           return (
             <div className="col-md-4" key={item.inventoryId}>
               <div className="card h-100">
+                {(item.media && item.media.length > 0) ? (
+                  <MediaSlideshow media={item.media} />
+                ) : (
+                  <div className="bg-secondary d-flex align-items-center justify-content-center" style={{ height: 200 }}>
+                    <div className="text-center">
+                      <i className="fa-solid fa-image text-secondary" style={{ fontSize: '2rem' }}></i>
+                      <p className="text-muted mt-2">No media available</p>
+                    </div>
+                  </div>
+                )}
                 <div className="card-body">
-                  <h6 className="card-title">{item.description}</h6>
-                  <p className="text-muted small mb-1">{item.itemType}</p>
+                  <p className="card-title">{item.itemType}</p>
+                  <h6 className="">{item.description}</h6>
                   <p className="mb-1"><strong>Price:</strong> ${item.price.toFixed(2)}</p>
                   <p className="mb-2"><strong>Capacity:</strong> {item.availability}</p>
-                  <span className={`badge ${isAvailable ? 'bg-success' : 'bg-secondary'} mb-2`}>
-                    {isAvailable ? 'Available' : 'Unavailable'}
+                  <span className={`badge ${statusBadgeMap[item.status] ?? 'bg-secondary'} mb-2`}>
+                    {item.status}
                   </span>
+                  {item.media && item.media.length > 0 && (
+                    <div className="mt-2">
+                      <small className="text-muted">
+                        <i className="fa-solid fa-photo-film me-1"></i>{item.media.length} media file{item.media.length !== 1 ? 's' : ''}
+                      </small>
+                    </div>
+                  )}
                 </div>
                 <div className="card-footer">
                   <button 
                     className="btn btn-primary btn-sm w-100" 
-                    disabled={!isAvailable} 
+                    disabled={!isBookable} 
                     onClick={() => { 
                       setBookingItem(item); 
                       setBookForm({ startDate: '', endDate: '', notes: '' }) 

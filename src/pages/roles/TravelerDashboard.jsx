@@ -4,7 +4,7 @@ import InventorySearch from '../../features/partners-inventory/components/Invent
 import BookingsManager from '../../features/bookings-reservations/components/BookingsManager'
 import ItinerariesManager from '../../features/itineraries/components/ItinerariesManager'
 import InvoicesManager from '../../features/billing-payments/components/InvoicesManager'
-import NotificationsPanel from '../../features/notifications/components/NotificationsPanel'
+import NotificationsPage from '../NotificationsPage'
 
 export default function TravelerDashboard() {
   return (
@@ -40,7 +40,7 @@ export default function TravelerDashboard() {
         <Route path="bookings" element={<BookingsManager />} />
         <Route path="itineraries" element={<ItinerariesManager />} />
         <Route path="invoices" element={<InvoicesManager />} />
-        <Route path="notifications" element={<NotificationsPanel />} />
+        <Route path="notifications" element={<NotificationsPage />} />
       </Routes>
     </div>
   )

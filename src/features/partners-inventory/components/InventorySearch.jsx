@@ -3,6 +3,13 @@ import inventoryService from '../services/inventoryService'
 import bookingsService from '../../bookings-reservations/services/bookingsService'
 import { useAuth } from '../../authentication/AuthProvider'
 
+const calculateNights = (startDate, endDate) => {
+  if (!startDate || !endDate) return 0
+  const checkIn = new Date(startDate)
+  const checkOut = new Date(endDate)
+  return Math.max(0, Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24)))
+}
+
 const BASE = import.meta.env.VITE_API_BASE_URL
 
 function MediaSlideshow({ media }) {
@@ -45,7 +52,7 @@ export default function InventorySearch() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [bookingItem, setBookingItem] = useState(null)
-  const [bookForm, setBookForm] = useState({ startDate: '', endDate: '', notes: '' })
+  const [bookForm, setBookForm] = useState({ startDate: '', endDate: '', numberOfGuests: 1, numberOfRooms: 1, roomType: '', notes: '' })
   const [booking, setBooking] = useState(false)
 
   const load = () => {
@@ -75,24 +82,31 @@ export default function InventorySearch() {
 
   const handleBook = async (e) => {
     e.preventDefault()
+    const userId = currentUser?.id
+    if (!userId || userId <= 0) {
+      alert('Unable to identify current user. Please log in again.')
+      return
+    }
     setBooking(true)
     try {
       await bookingsService.create({
-        userId: currentUser?.id,
+        userId,
         partnerId: bookingItem.partnerId,
         inventoryId: bookingItem.inventoryId,
         itemType: bookingItem.itemType,
-        bookingDate: new Date(bookForm.startDate).toISOString(),
-        status: 1,
-        amount: bookingItem.price,
-        notes: bookForm.notes,
-        startDate: bookForm.startDate,
-        endDate: bookForm.endDate,
+        checkInDate: new Date(bookForm.startDate).toISOString(),
+        checkOutDate: new Date(bookForm.endDate).toISOString(),
+        numberOfGuests: Number(bookForm.numberOfGuests),
+        numberOfRooms: Number(bookForm.numberOfRooms),
+        roomType: bookForm.roomType || bookingItem.itemType,
+        specialRequests: bookForm.notes,
+        amount: bookingItem.price * calculateNights(bookForm.startDate, bookForm.endDate) * Number(bookForm.numberOfRooms || 1),
       })
       alert('Booking created successfully!')
       setBookingItem(null)
+      load()
     } catch (err) { 
-      alert(err?.response?.data?.message || err.message) 
+      alert(err?.response?.data?.error || err?.response?.data?.message || err.message) 
     } finally { 
       setBooking(false) 
     }
@@ -160,7 +174,7 @@ export default function InventorySearch() {
                     disabled={!isBookable} 
                     onClick={() => { 
                       setBookingItem(item); 
-                      setBookForm({ startDate: '', endDate: '', notes: '' }) 
+                      setBookForm({ startDate: '', endDate: '', numberOfGuests: 1, numberOfRooms: 1, roomType: item.itemType || '', notes: '' }) 
                     }}>
                     Book Now
                   </button>
@@ -195,6 +209,20 @@ export default function InventorySearch() {
                   <div>
                     <label className="form-label text-white font-monospace text-uppercase small">End Date</label>
                     <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={bookForm.endDate} onChange={e => setBookForm(p => ({ ...p, endDate: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="form-label text-white font-monospace text-uppercase small">Room Type</label>
+                    <input className="form-control bg-dark text-white border-secondary rounded-0" value={bookForm.roomType} onChange={e => setBookForm(p => ({ ...p, roomType: e.target.value }))} required />
+                  </div>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label text-white font-monospace text-uppercase small">Guests</label>
+                      <input type="number" min={1} className="form-control bg-dark text-white border-secondary rounded-0" value={bookForm.numberOfGuests} onChange={e => setBookForm(p => ({ ...p, numberOfGuests: Number(e.target.value) }))} required />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label text-white font-monospace text-uppercase small">Rooms</label>
+                      <input type="number" min={1} className="form-control bg-dark text-white border-secondary rounded-0" value={bookForm.numberOfRooms} onChange={e => setBookForm(p => ({ ...p, numberOfRooms: Number(e.target.value) }))} required />
+                    </div>
                   </div>
                   <div>
                     <label className="form-label text-white font-monospace text-uppercase small">Notes</label>

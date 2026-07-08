@@ -181,7 +181,7 @@ export default function InvoicesManager() {
                 <button className="btn-close btn-close-white" onClick={() => setPreview(null)} />
               </div>
               <div className="modal-body">
-                {[['Invoice ID', `#${preview.invoiceId}`], ['Booking ID', `#${preview.bookingId}`], ['Inventory', preview.inventoryName || '-'], ['Booked By', preview.userName || '-'], ['Amount', `$${Number(preview.amount || 0).toFixed(2)}`], ['Invoice Date', formatDate(preview.invoiceDate)], ['Due Date', formatDate(preview.dueDate)], ['Status', INV_STATUS_MAP[Number(preview.status)] || preview.status], ['Description', preview.description || '-']].map(([label, val]) => (
+                {[['Inventory', preview.inventoryName || '-'], ['Booked By', preview.userName || '-'], ['Amount', `$${Number(preview.amount || 0).toFixed(2)}`], ['Invoice Date', formatDate(preview.invoiceDate)], ['Due Date', formatDate(preview.dueDate)], ['Status', INV_STATUS_MAP[Number(preview.status)] || preview.status], ['Description', preview.description || '-']].map(([label, val]) => (
                   <div key={label} className="mb-3">
                     <div className="text-info font-monospace text-uppercase small fw-bold mb-1">{label}</div>
                     <div className="text-light" style={{ lineHeight: 1.7 }}>{val}</div>
@@ -287,7 +287,7 @@ export default function InvoicesManager() {
                       <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.bookingId} onChange={e => setForm(p => ({ ...p, bookingId: e.target.value }))} required>
                         <option value="">— Select Booking —</option>
                         {userBookings.map(b => (
-                          <option key={b.bookingId} value={b.bookingId}>#{b.bookingId} — {b.inventoryName || b.itemType || 'Booking'}</option>
+                          <option key={b.bookingId} value={b.bookingId}>{b.inventoryName || b.itemType || 'Booking'} — {b.checkInDate ? formatDate(b.checkInDate) : ''}</option>
                         ))}
                       </select>
                     </div>

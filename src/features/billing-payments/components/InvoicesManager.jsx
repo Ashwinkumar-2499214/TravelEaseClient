@@ -10,8 +10,14 @@ const EMPTY = { bookingId: '', amount: '', dueDate: '', description: '' }
 
 const statusBadge = (s) => {
   const label = INV_STATUS_MAP[Number(s)] || s
-  const map = { Paid: 'bg-success', Draft: 'bg-secondary', Issued: 'bg-primary', Overdue: 'bg-danger', Cancelled: 'bg-dark' }
-  return <span className={`badge ${map[label] || 'bg-secondary'}`}>{label}</span>
+  const map = { 
+    Paid: 'bg-success bg-opacity-10 text-success', 
+    Draft: 'bg-secondary bg-opacity-10 text-secondary', 
+    Issued: 'bg-primary bg-opacity-10 text-primary', 
+    Overdue: 'bg-danger bg-opacity-10 text-danger', 
+    Cancelled: 'bg-dark bg-opacity-10 text-dark' 
+  }
+  return <span className={`badge rounded-pill px-3 ${map[label] || 'bg-secondary bg-opacity-10 text-secondary'}`}>{label}</span>
 }
 
 function downloadInvoicePdf(inv) {
@@ -20,13 +26,13 @@ function downloadInvoicePdf(inv) {
   let y = 50
 
   // Header bar
-  doc.setFillColor(0, 188, 212)
+  doc.setFillColor(111, 66, 193) // Purple to match the new branding theme
   doc.rect(0, 0, W, 80, 'F')
 
   // Logo placeholder circle
   doc.setFillColor(255, 255, 255)
   doc.circle(55, 40, 22, 'F')
-  doc.setTextColor(0, 188, 212)
+  doc.setTextColor(111, 66, 193)
   doc.setFontSize(11)
   doc.setFont('helvetica', 'bold')
   doc.text('TE', 47, 44)
@@ -68,7 +74,7 @@ function downloadInvoicePdf(inv) {
     const col = i % 2 === 0 ? 50 : W / 2 + 20
     if (i % 2 === 0 && i > 0) y += 28
     doc.setFont('helvetica', 'bold')
-    doc.setTextColor(0, 188, 212)
+    doc.setTextColor(111, 66, 193)
     doc.text(label, col, y)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(50, 50, 50)
@@ -78,20 +84,20 @@ function downloadInvoicePdf(inv) {
   y += 50
 
   // Divider
-  doc.setDrawColor(0, 188, 212)
+  doc.setDrawColor(111, 66, 193)
   doc.setLineWidth(1.5)
   doc.line(50, y, W - 50, y)
   y += 20
 
   // Amount section
-  doc.setFillColor(245, 250, 252)
+  doc.setFillColor(248, 249, 250)
   doc.roundedRect(50, y, W - 100, 60, 4, 4, 'F')
   doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(80, 80, 80)
   doc.text('Total Amount Due', 70, y + 22)
   doc.setFontSize(22)
-  doc.setTextColor(0, 150, 100)
+  doc.setTextColor(111, 66, 193)
   doc.text(`$${Number(inv.amount).toFixed(2)}`, W - 70, y + 38, { align: 'right' })
 
   y += 90
@@ -103,7 +109,7 @@ function downloadInvoicePdf(inv) {
   doc.text(`Generated on ${new Date().toLocaleString()}  |  Created: ${formatDate(inv.createdDate)}`, 50, y)
 
   // Bottom bar
-  doc.setFillColor(0, 188, 212)
+  doc.setFillColor(111, 66, 193)
   doc.rect(0, doc.internal.pageSize.getHeight() - 30, W, 30, 'F')
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
@@ -131,7 +137,7 @@ export default function InvoicesManager() {
     const params = isTraveler ? { userId: currentUser.id } : {}
     billingService.invoices.list(params)
       .then(data => setInvoices(Array.isArray(data) ? data : data ? [data] : []))
-      .catch(e => setError(e.message))
+      .catch(e => setError(e?.response?.data?.message || e.message))
       .finally(() => setLoading(false))
   }
 
@@ -160,163 +166,237 @@ export default function InvoicesManager() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete invoice?')) return
+    if (!window.confirm('Are you sure you want to delete this invoice?')) return
     try { await billingService.invoices.remove(id); load() }
     catch (err) { alert(err?.response?.data?.message || err.message) }
   }
 
-  if (loading) return <div className="text-center py-4"><div className="spinner-border" /></div>
-  if (error) return <div className="alert alert-danger">{error}</div>
+  if (error) return <div className="container-fluid py-4"><div className="alert alert-danger">{error}</div></div>
 
   return (
-    <div>
-      {preview && (
-        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.7)' }}>
-          <div className="modal-dialog modal-lg modal-dialog-scrollable">
-            <div className="modal-content bg-dark border-secondary rounded-0">
-              <div className="modal-header border-secondary" style={{ background: '#00bcd4' }}>
-                <h6 className="modal-title text-dark font-monospace text-uppercase fw-bold">
-                  <i className="fa-solid fa-file-invoice me-2" />Invoice Preview
-                </h6>
-                <button className="btn-close btn-close-white" onClick={() => setPreview(null)} />
-              </div>
-              <div className="modal-body">
-                {[['Inventory', preview.inventoryName || '-'], ['Booked By', preview.userName || '-'], ['Amount', `$${Number(preview.amount || 0).toFixed(2)}`], ['Invoice Date', formatDate(preview.invoiceDate)], ['Due Date', formatDate(preview.dueDate)], ['Status', INV_STATUS_MAP[Number(preview.status)] || preview.status], ['Description', preview.description || '-']].map(([label, val]) => (
-                  <div key={label} className="mb-3">
-                    <div className="text-info font-monospace text-uppercase small fw-bold mb-1">{label}</div>
-                    <div className="text-light" style={{ lineHeight: 1.7 }}>{val}</div>
-                    <hr className="border-secondary mt-2" />
-                  </div>
+    <div className="container-fluid py-4">
+      {/* Header Section */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+          <h2 className="fw-bold mb-2 text-purple" style={{ color: '#6f42c1' }}>
+            <i className="bi bi-file-earmark-spreadsheet-fill me-2" aria-hidden="true"></i>
+            Invoice Registry
+          </h2>
+          <p className="text-muted mb-0">Financial Management System</p>
+        </div>
+
+        <div className="d-flex align-items-center gap-2">
+          <button 
+            className="btn btn-primary btn-sm text-white" 
+            style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}
+            onClick={openCreate}
+          >
+            <i className="bi bi-plus-circle-fill me-2" aria-hidden="true" />
+            New Invoice
+          </button>
+        </div>
+      </div>
+
+      {/* Main Table Content / Loading */}
+      {loading ? (
+        <div className="text-center py-5">
+          <div className="spinner-border" style={{ color: '#6f42c1' }}>
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      ) : (
+        <div className="card border-0 shadow-sm">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th className="small fw-bold text-secondary text-uppercase ps-4">Inventory</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Booked By</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Amount</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Invoice Date</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Due Date</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Description</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Status</th>
+                  <th className="small fw-bold text-secondary text-uppercase text-end pe-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoices.map(inv => (
+                  <tr key={inv.invoiceId}>
+                    <td className="ps-4 fw-semibold text-dark">{inv.inventoryName || '-'}</td>
+                    <td className="text-muted">{inv.userName || '-'}</td>
+                    <td className="fw-semibold text-dark">${Number(inv.amount || 0).toFixed(2)}</td>
+                    <td className="text-muted">{formatDate(inv.invoiceDate)}</td>
+                    <td className="text-muted">{formatDate(inv.dueDate)}</td>
+                    <td className="text-muted" style={{ maxWidth: 180 }}>
+                      <span className="text-truncate d-block" title={inv.description}>{inv.description || '-'}</span>
+                    </td>
+                    <td>{statusBadge(inv.status)}</td>
+                    <td className="text-end pe-4">
+                      <div className="d-flex gap-2 justify-content-end">
+                        <button 
+                          className="btn btn-sm btn-outline-primary" 
+                          title="Preview & Download PDF" 
+                          onClick={() => setPreview(inv)}
+                        >
+                          <i className="bi bi-file-pdf" />
+                        </button>
+                        <button 
+                          className="btn btn-sm btn-outline-success" 
+                          onClick={() => openEdit(inv)}
+                          title="Edit Invoice"
+                        >
+                          <i className="bi bi-pencil" />
+                        </button>
+                        <button 
+                          className="btn btn-sm btn-outline-danger" 
+                          onClick={() => handleDelete(inv.invoiceId)}
+                          title="Delete Invoice"
+                        >
+                          <i className="bi bi-trash" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
+                {invoices.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="text-center py-5 text-muted bg-light bg-opacity-50">
+                      <i className="bi bi-file-invoice me-2 fs-4 d-block mb-2 text-secondary"></i>
+                      <span>No invoices found in system registry.</span>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Statistics Blocks */}
+      <div className="row mt-5">
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3 style={{ color: '#6f42c1' }}>{invoices.length}</h3>
+              <small className="text-muted">Total Registry Invoices</small>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3 className="text-success">
+                ${invoices.reduce((acc, curr) => acc + (Number(curr.status) === 3 ? Number(curr.amount || 0) : 0), 0).toFixed(2)}
+              </h3>
+              <small className="text-muted">Total Paid Volume</small>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3 className="text-danger">
+                {invoices.filter(inv => Number(inv.status) === 4).length}
+              </h3>
+              <small className="text-muted">Overdue Actions Required</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Invoice Preview Modal */}
+      {preview && (
+        <div className="modal show d-block" tabIndex="-1" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header text-white" style={{ background: '#6f42c1' }}>
+                <h5 className="modal-title fw-bold">
+                  <i className="bi bi-eye-fill me-2" />Invoice Preview
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setPreview(null)} />
               </div>
-              <div className="modal-footer border-secondary">
-                <button className="btn btn-outline-secondary btn-sm rounded-0 font-monospace" onClick={() => setPreview(null)}>Close</button>
-                <button className="btn btn-info btn-sm rounded-0 font-monospace text-dark" onClick={() => { downloadInvoicePdf(preview); setPreview(null) }}>
-                  <i className="fa-solid fa-download me-1" />Download PDF
+              <div className="modal-body p-4">
+                <div className="row row-cols-1 row-cols-md-2 g-3">
+                  {[
+                    ['Inventory', preview.inventoryName || '-'],
+                    ['Booked By', preview.userName || '-'],
+                    ['Amount', `$${Number(preview.amount || 0).toFixed(2)}`],
+                    ['Invoice Date', formatDate(preview.invoiceDate)],
+                    ['Due Date', formatDate(preview.dueDate)],
+                    ['Status', INV_STATUS_MAP[Number(preview.status)] || preview.status],
+                    ['Description', preview.description || '-']
+                  ].map(([label, val]) => (
+                    <div key={label} className="col">
+                      <div className="text-muted small fw-bold text-uppercase mb-1">{label}</div>
+                      <div className="text-dark fw-semibold" style={{ lineHeight: 1.7 }}>{val}</div>
+                      <hr className="text-muted opacity-25 mt-2" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="modal-footer bg-light">
+                <button className="btn btn-outline-secondary btn-sm" onClick={() => setPreview(null)}>Close</button>
+                <button className="btn btn-primary btn-sm text-white" style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }} onClick={() => { downloadInvoicePdf(preview); setPreview(null) }}>
+                  <i className="bi bi-download me-1" />Download PDF
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
-      <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
-        <div>
-          <h5 className="text-white font-monospace text-uppercase mb-1">Invoice Registry</h5>
-          <small className="text-light font-monospace">Financial Management System</small>
-        </div>
-        <div className="d-flex align-items-center gap-3">
-          <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
-          <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
-            <i className="fa-solid fa-plus me-2" />New Invoice
-          </button>
-        </div>
-      </div>
 
-      <div className="table-responsive">
-        <table className="table table-dark table-hover align-middle rounded-0 border-secondary">
-          <thead className="bg-info text-dark">
-            <tr>
-              <th className="font-monospace text-uppercase small border-secondary">Inventory</th>
-              <th className="font-monospace text-uppercase small border-secondary">Booked By</th>
-              <th className="font-monospace text-uppercase small border-secondary">Amount</th>
-              <th className="font-monospace text-uppercase small border-secondary">Invoice Date</th>
-              <th className="font-monospace text-uppercase small border-secondary">Due Date</th>
-              <th className="font-monospace text-uppercase small border-secondary">Description</th>
-              <th className="font-monospace text-uppercase small border-secondary">Status</th>
-              <th className="font-monospace text-uppercase small border-secondary">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoices.map(inv => (
-              <tr key={inv.invoiceId} className="border-secondary bg-dark">
-                <td className="text-secondary font-monospace border-secondary bg-darker">{inv.inventoryName || '-'}</td>
-                <td className="text-secondary font-monospace border-secondary bg-darker">{inv.userName || '-'}</td>
-                <td className="text-secondary font-monospace border-secondary bg-darker">${Number(inv.amount || 0).toFixed(2)}</td>
-                <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(inv.invoiceDate)}</td>
-                <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(inv.dueDate)}</td>
-                <td className="text-secondary font-monospace border-secondary bg-darker" style={{ maxWidth: 180 }}>
-                  <span className="text-truncate d-block" title={inv.description}>{inv.description || '-'}</span>
-                </td>
-                <td className="border-secondary bg-darker">{statusBadge(inv.status)}</td>
-                <td className="border-secondary bg-darker">
-                  <div className="btn-group btn-group-sm">
-                    <button className="btn btn-outline-success rounded-0" title="Preview & Download PDF" onClick={() => setPreview(inv)}>
-                      <i className="fa-solid fa-file-pdf" />
-                    </button>
-                    <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(inv)}>
-                      <i className="fa-solid fa-pen" />
-                    </button>
-                    <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(inv.invoiceId)}>
-                      <i className="fa-solid fa-trash" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {invoices.length === 0 && (
-              <tr>
-                <td colSpan={8} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
-                  <i className="fa-solid fa-file-invoice me-2"></i>
-                  <span className="font-monospace">No invoices found in system registry.</span>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
+      {/* Edit / Create Form Modal */}
       {showModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
-          <div className="modal-dialog">
-            <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleSubmit}>
-              <div className="modal-header bg-dark border-secondary">
-                <div>
-                  <h5 className="text-white font-monospace text-uppercase mb-1">{editInv ? 'Edit Invoice' : 'New Invoice'}</h5>
-                  <small className="text-light font-monospace">Financial Management System</small>
-                </div>
-                <div className="d-flex align-items-center gap-2">
-                  <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
-                  <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)} />
-                </div>
+        <div className="modal show d-block" tabIndex="-1" role="dialog" style={{ background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)' }}>
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <form className="modal-content border-0 shadow-lg" onSubmit={handleSubmit}>
+              <div className="modal-header text-white" style={{ backgroundColor: '#6f42c1' }}>
+                <h5 className="modal-title fw-bold">
+                  <i className={`bi ${editInv ? 'bi-pencil-square' : 'bi-file-earmark-plus-fill'} me-2`}></i>
+                  {editInv ? 'Edit Invoice Details' : 'Generate New Invoice'}
+                </h5>
+                <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setShowModal(false)} />
               </div>
-              <div className="modal-body bg-dark">
+              <div className="modal-body p-4">
                 <div className="d-flex flex-column gap-3">
                   {!editInv && (
                     <div>
-                      <label className="form-label text-white font-monospace text-uppercase small">Booking</label>
-                      <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.bookingId} onChange={e => setForm(p => ({ ...p, bookingId: e.target.value }))} required>
-                        <option value="">— Select Booking —</option>
+                      <label className="form-label text-muted small fw-bold text-uppercase">Booking Attachment</label>
+                      <select className="form-select" value={form.bookingId} onChange={e => setForm(p => ({ ...p, bookingId: e.target.value }))} required>
+                        <option value="">— Select Connected Booking —</option>
                         {userBookings.map(b => (
-                          <option key={b.bookingId} value={b.bookingId}>{b.inventoryName || b.itemType || 'Booking'} — {b.checkInDate ? formatDate(b.checkInDate) : ''}</option>
+                          <option key={b.bookingId} value={b.bookingId}>
+                            {b.inventoryName || b.itemType || 'Booking'} — {b.checkInDate ? formatDate(b.checkInDate) : ''}
+                          </option>
                         ))}
                       </select>
                     </div>
                   )}
                   <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Amount</label>
-                    <input type="number" step="0.01" className="form-control bg-dark text-white border-secondary rounded-0" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} required />
+                    <label className="form-label text-muted small fw-bold text-uppercase">Billing Amount ($)</label>
+                    <input type="number" step="0.01" className="form-control" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} required />
                   </div>
                   <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Due Date</label>
-                    <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} required />
+                    <label className="form-label text-muted small fw-bold text-uppercase">Terms / Due Date</label>
+                    <input type="date" className="form-control" value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} required />
                   </div>
                   <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Description</label>
-                    <textarea className="form-control bg-dark text-white border-secondary rounded-0" rows={2} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+                    <label className="form-label text-muted small fw-bold text-uppercase">Statement Description</label>
+                    <textarea className="form-control" rows={2} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
                   </div>
                 </div>
               </div>
-              <div className="modal-footer bg-dark border-secondary">
-                <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-outline-info rounded-0 font-monospace text-uppercase">
-                  <i className="fa-solid fa-save me-2"></i>Save Invoice
+              <div className="modal-footer bg-light">
+                <button type="button" className="btn btn-outline-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary text-white" style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}>
+                  <i className="bi bi-save me-2"></i>{editInv ? 'Save Changes' : 'Commit Invoice'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </div>
   )
 }

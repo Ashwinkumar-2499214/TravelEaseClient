@@ -25,17 +25,17 @@ export default function AdminDashboard() {
   return (
     <div>
       {/* Header */}
-      <div className="card card-purple-accent mb-4 border-left" style={{ borderLeft: '4px solid #7e22ce' }}>
-        <div className="card-body">
-          <div className="d-flex align-items-center">
+      <div className="card card-purple mb-4" style={{ borderLeft: '4px solid var(--te-purple-700)' }}>
+        <div className="card-body p-4">
+          <div className="d-flex align-items-center gap-3">
             <div
-              className="rounded-circle d-flex align-items-center justify-content-center text-white me-3"
-              style={{ width: '50px', height: '50px', backgroundColor: '#7e22ce' }}
+              className="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0"
+              style={{ width: '50px', height: '50px', backgroundColor: 'var(--te-purple-700)', minWidth: '50px' }}
             >
               <i className="bi bi-sliders" style={{ fontSize: '1.5rem' }}></i>
             </div>
             <div>
-              <h5 className="mb-1" style={{ color: '#7e22ce', fontWeight: 700 }}>
+              <h5 className="mb-1 text-purple" style={{ fontWeight: 700 }}>
                 Admin Console
               </h5>
               <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>
@@ -47,18 +47,19 @@ export default function AdminDashboard() {
       </div>
 
       {/* Navigation Tabs */}
-      <ul className="nav nav-tabs mb-4" style={{ borderBottomColor: '#e5e7eb' }}>
+      <ul className="nav nav-tabs mb-4" style={{ borderBottomColor: '#e5e7eb', borderBottomWidth: '2px' }}>
         {NAV.map(item => (
           <li className="nav-item" key={item.path}>
             <NavLink
               to={`/dashboard/${item.path}`}
               className={({ isActive }) => `nav-link d-flex align-items-center gap-2 ${isActive ? 'active' : ''}`}
               style={({ isActive }) => ({
-                color: isActive ? '#7e22ce' : '#6b7280',
-                borderBottomColor: isActive ? '#7e22ce' : 'transparent',
+                color: isActive ? 'var(--te-purple-700)' : 'var(--te-gray-600)',
+                borderBottomColor: isActive ? 'var(--te-purple-700)' : 'transparent',
                 borderBottomWidth: '3px',
                 fontWeight: isActive ? 600 : 500,
-                paddingBottom: '0.75rem'
+                paddingBottom: '0.75rem',
+                transition: 'all 0.2s ease'
               })}
             >
               <i className={`bi ${item.icon}`}></i>
@@ -88,12 +89,12 @@ export default function AdminDashboard() {
 
 function AdminOverview() {
   const cards = [
-    { label: 'Partners', desc: 'Manage travel partners and vendors', icon: 'bi-handshake', path: '/dashboard/partners', color: '#3b82f6' },
+    { label: 'Partners', desc: 'Manage travel partners and vendors', icon: 'bi-handshake', path: '/dashboard/partners', color: 'var(--te-status-info)' },
     { label: 'Users', desc: 'User management and role assignments', icon: 'bi-people-fill', path: '/dashboard/users', color: '#06b6d4' },
-    { label: 'Bookings', desc: 'Monitor all system bookings', icon: 'bi-briefcase-fill', path: '/dashboard/bookings', color: '#10b981' },
-    { label: 'Itineraries', desc: 'View and manage itineraries', icon: 'bi-map-fill', path: '/dashboard/itineraries', color: '#f59e0b' },
-    { label: 'Invoices', desc: 'Billing and invoice management', icon: 'bi-file-earmark-text-fill', path: '/dashboard/invoices', color: '#8b5cf6' },
-    { label: 'Compliance', desc: 'Audit logs and policies', icon: 'bi-shield-fill', path: '/dashboard/compliance', color: '#ef4444' },
+    { label: 'Bookings', desc: 'Monitor all system bookings', icon: 'bi-briefcase-fill', path: '/dashboard/bookings', color: 'var(--te-status-success)' },
+    { label: 'Itineraries', desc: 'View and manage itineraries', icon: 'bi-map-fill', path: '/dashboard/itineraries', color: 'var(--te-status-warning)' },
+    { label: 'Invoices', desc: 'Billing and invoice management', icon: 'bi-file-earmark-text-fill', path: '/dashboard/invoices', color: 'var(--te-purple-600)' },
+    { label: 'Compliance', desc: 'Audit logs and policies', icon: 'bi-shield-fill', path: '/dashboard/compliance', color: 'var(--te-status-danger)' },
     { label: 'Analytics', desc: 'System-wide KPIs and trends', icon: 'bi-graph-up', path: '/dashboard/analytics', color: '#6366f1' },
     { label: 'Notifications', desc: 'System alerts and notifications', icon: 'bi-bell-fill', path: '/dashboard/notifications', color: '#ec4899' },
   ]
@@ -101,25 +102,24 @@ function AdminOverview() {
   return (
     <div className="row g-4">
       {cards.map(card => (
-        <div className="col-lg-6 col-xl-4" key={card.path}>
+        <div className="col-md-6 col-lg-4" key={card.path}>
           <NavLink to={card.path} className="text-decoration-none">
             <div
-              className="card h-100 border-0 transition-all"
+              className="card h-100 border-0 shadow-sm transition"
               style={{
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-4px)'
-                e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.1)'
+                e.currentTarget.style.boxShadow = 'var(--te-shadow-lg)'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'
+                e.currentTarget.style.boxShadow = 'var(--te-shadow-sm)'
               }}
             >
-              <div className="card-body">
+              <div className="card-body p-4">
                 <div className="d-flex align-items-start gap-3">
                   <div
                     className="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0"
@@ -127,23 +127,24 @@ function AdminOverview() {
                       width: '50px',
                       height: '50px',
                       backgroundColor: card.color,
-                      fontSize: '1.5rem'
+                      fontSize: '1.5rem',
+                      minWidth: '50px'
                     }}
                   >
                     <i className={`bi ${card.icon}`}></i>
                   </div>
-                  <div>
-                    <h5 className="card-title mb-1" style={{ color: '#111827', fontWeight: 700 }}>
+                  <div className="flex-grow-1">
+                    <h5 className="card-title mb-1 text-gray-900" style={{ fontWeight: 700, fontSize: '1rem' }}>
                       {card.label}
                     </h5>
-                    <p className="card-text text-muted small mb-0">
+                    <p className="card-text text-muted small mb-0" style={{ fontSize: '0.875rem' }}>
                       {card.desc}
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="card-footer bg-transparent border-0">
-                <small className="text-primary fw-600" style={{ color: card.color }}>
+              <div className="card-footer bg-white border-top border-gray-200">
+                <small className="fw-600" style={{ color: card.color }}>
                   Access → {card.label}
                 </small>
               </div>

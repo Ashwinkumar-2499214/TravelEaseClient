@@ -5,12 +5,13 @@ import { formatDate } from '../../../utils/date'
 import { useAuth } from '../../authentication/AuthProvider'
 
 const STATUS_MAP = { 1: 'Draft', 2: 'Active', 3: 'Modified', 4: 'Completed', 5: 'Cancelled' }
-const STATUS_OPTIONS = [1, 2, 3, 4, 5]
+const STATUSOPTIONS = [1, 2, 3, 4, 5]
 const EMPTY = { title: '', description: '', startDate: '', endDate: '' }
 
 export default function ItinerariesManager() {
   const { currentUser } = useAuth()
   const isTraveler = currentUser?.role === 'Traveler'
+  
   const [itins, setItins] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -18,12 +19,13 @@ export default function ItinerariesManager() {
   const [editItin, setEditItin] = useState(null)
   const [form, setForm] = useState(EMPTY)
   const [preview, setPreview] = useState(null)
+
   const load = () => {
     setLoading(true)
     const params = isTraveler ? { userId: currentUser?.id } : {}
     itinerariesService.list(params)
-      .then(setItins)
-      .catch(e => setError(e.message))
+      .then(data => setItins(Array.isArray(data) ? data : []))
+      .catch(e => setError(e?.response?.data?.message || e.message))
       .finally(() => setLoading(false))
   }
 
@@ -34,7 +36,7 @@ export default function ItinerariesManager() {
     setForm(EMPTY)
     setShowModal(true) 
   }
-  
+
   const openEdit = (i) => {
     setEditItin(i)
     setForm({ 
@@ -51,11 +53,16 @@ export default function ItinerariesManager() {
     const payload = {
       userId: currentUser?.id,
       title: form.title,
+      description: form.description,
       startDate: new Date(form.startDate).toISOString(),
       endDate: new Date(form.endDate).toISOString(),
     }
     try {
-      editItin ? await itinerariesService.update(editItin.itineraryId, payload) : await itinerariesService.create(payload)
+      if (editItin) {
+        await itinerariesService.update(editItin.itineraryId, payload)
+      } else {
+        await itinerariesService.create(payload)
+      }
       setShowModal(false)
       load()
     } catch (err) { 
@@ -64,7 +71,7 @@ export default function ItinerariesManager() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete itinerary?')) return
+    if (!window.confirm('Are you sure you want to delete this itinerary?')) return
     try { 
       await itinerariesService.remove(id)
       load() 
@@ -148,144 +155,236 @@ export default function ItinerariesManager() {
 
   const statusBadge = (s) => {
     const label = STATUS_MAP[s] || s
-    const map = { Active: 'bg-success', Draft: 'bg-warning text-dark', Modified: 'bg-secondary', Completed: 'bg-info', Cancelled: 'bg-danger' }
-    return <span className={`badge ${map[label] || 'bg-secondary'}`}>{label}</span>
+    const map = { 
+      Active: 'bg-success bg-opacity-10 text-success', 
+      Draft: 'bg-warning bg-opacity-10 text-warning', 
+      Modified: 'bg-secondary bg-opacity-10 text-secondary', 
+      Completed: 'bg-info bg-opacity-10 text-info', 
+      Cancelled: 'bg-danger bg-opacity-10 text-danger' 
+    }
+    return <span className={`badge rounded-pill px-3 ${map[label] || 'bg-secondary text-white'}`}>{label}</span>
   }
 
-  if (loading) return <div className="text-center py-4"><div className="spinner-border" /></div>
-  if (error) return <div className="alert alert-danger">{error}</div>
+  if (error) return <div className="alert alert-danger m-4">{error}</div>
 
   return (
-    <div>
-      {preview && (
-        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.7)' }}>
-          <div className="modal-dialog modal-lg modal-dialog-scrollable">
-            <div className="modal-content bg-dark border-secondary rounded-0">
-              <div className="modal-header border-secondary" style={{ background: '#00bcd4' }}>
-                <h6 className="modal-title text-dark font-monospace text-uppercase fw-bold">
-                  <i className="fa-solid fa-map me-2" />Itinerary Preview
-                </h6>
-                <button className="btn-close btn-close-white" onClick={() => setPreview(null)} />
-              </div>
-              <div className="modal-body">
-                {[['Itinerary ID', `#${preview.itineraryId}`], ['Title', preview.title || '-'], ['Start Date', formatDate(preview.startDate)], ['End Date', formatDate(preview.endDate)], ['Status', STATUS_MAP[preview.status] || preview.status], ['Created', formatDate(preview.createdDate)]].map(([label, val]) => (
-                  <div key={label} className="mb-3">
-                    <div className="text-info font-monospace text-uppercase small fw-bold mb-1">{label}</div>
-                    <div className="text-light" style={{ lineHeight: 1.7 }}>{val}</div>
-                    <hr className="border-secondary mt-2" />
-                  </div>
+    <div className="container-fluid py-4">
+      
+      {/* Header Section */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+          <h2 className="fw-bold mb-1 text-dark" style={{ letterSpacing: '-0.5px' }}>
+            Itineraries
+          </h2>
+          <p className="text-muted mb-0 small">Travel Planning System and Resource Registry</p>
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          <button 
+            className="btn btn-primary btn-sm text-white" 
+            style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}
+            onClick={openCreate}
+          >
+            <i className="bi bi-plus-lg me-2" aria-hidden="true" />
+            New Itinerary
+          </button>
+        </div>
+      </div>
+
+      {/* Main Table Content / Loading */}
+      {loading ? (
+        <div className="text-center py-5">
+          <div className="spinner-border" style={{ color: '#6f42c1' }}>
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      ) : (
+        <div className="card border-0 shadow-sm">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th className="small fw-bold text-secondary text-uppercase ps-4">Title</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Start Date</th>
+                  <th className="small fw-bold text-secondary text-uppercase">End Date</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Status</th>
+                  {!isTraveler && <th className="small fw-bold text-secondary text-uppercase">Change Status</th>}
+                  <th className="small fw-bold text-secondary text-uppercase text-end pe-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {itins.map(i => (
+                  <tr key={i.itineraryId}>
+                    <td className="ps-4 fw-semibold text-dark">{i.title || `Itinerary #${i.itineraryId}`}</td>
+                    <td className="text-muted">{formatDate(i.startDate)}</td>
+                    <td className="text-muted">{formatDate(i.endDate)}</td>
+                    <td>{statusBadge(i.status)}</td>
+                    {!isTraveler && (
+                      <td>
+                        <select 
+                          className="form-select form-select-sm border-secondary shadow-sm" 
+                          style={{ maxWidth: '130px' }}
+                          value={i.status} 
+                          onChange={e => handleStatus(i.itineraryId, e.target.value)}
+                        >
+                          {STATUSOPTIONS.map(s => (
+                            <option key={s} value={s}>{STATUS_MAP[s]}</option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
+                    <td className="text-end pe-4">
+                      <div className="d-flex gap-2 justify-content-end">
+                        <button 
+                          className="btn btn-sm btn-outline-primary" 
+                          style={{ borderColor: '#6f42c1', color: '#6f42c1' }}
+                          onClick={() => setPreview(i)}
+                          title="Preview Itinerary"
+                        >
+                          <i className="bi bi-eye" />
+                        </button>
+                        <button 
+                          className="btn btn-sm btn-outline-success" 
+                          onClick={() => openEdit(i)}
+                          title="Edit Itinerary"
+                        >
+                          <i className="bi bi-pencil" />
+                        </button>
+                        <button 
+                          className="btn btn-sm btn-outline-danger" 
+                          onClick={() => handleDelete(i.itineraryId)}
+                          title="Delete Itinerary"
+                        >
+                          <i className="bi bi-trash" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
+                {itins.length === 0 && (
+                  <tr>
+                    <td colSpan={isTraveler ? 5 : 6} className="text-center py-5 text-muted bg-light bg-opacity-50">
+                      <i className="bi bi-journal-x me-2 fs-4 d-block mb-2 text-secondary"></i>
+                      <span>No itineraries found in system registry.</span>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Statistics Blocks */}
+      <div className="row mt-5">
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3 style={{ color: '#6f42c1' }}>{itins.length}</h3>
+              <small className="text-muted">Total Registered Itineraries</small>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3 className="text-success">{itins.filter(i => i.status === 2).length}</h3>
+              <small className="text-muted">Active Plans</small>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3 className="text-danger">{itins.filter(i => i.status === 5).length}</h3>
+              <small className="text-muted">Cancelled Plans</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Preview Dialog Modal */}
+      {preview && (
+        <div className="modal show d-block" tabIndex="-1" role="dialog" style={{ background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)' }}>
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header text-white" style={{ backgroundColor: '#6f42c1' }}>
+                <h5 className="modal-title fw-bold">
+                  <i className="bi bi-eye-fill me-2"></i>Itinerary Preview
+                </h5>
+                <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setPreview(null)} />
               </div>
-              <div className="modal-footer border-secondary">
-                <button className="btn btn-outline-secondary btn-sm rounded-0 font-monospace" onClick={() => setPreview(null)}>Close</button>
-                <button className="btn btn-info btn-sm rounded-0 font-monospace text-dark" onClick={() => { handleExport(preview); setPreview(null) }}>
-                  <i className="fa-solid fa-download me-1" />Download PDF
+              <div className="modal-body p-4">
+                <div className="d-flex flex-column gap-3">
+                  {[
+                    ['Itinerary ID', `#${preview.itineraryId}`],
+                    ['Title', preview.title || '-'],
+                    ['Description', preview.description || '-'],
+                    ['Start Date', formatDate(preview.startDate)],
+                    ['End Date', formatDate(preview.endDate)],
+                    ['Status', STATUS_MAP[preview.status] || preview.status],
+                    ['Created', formatDate(preview.createdDate)]
+                  ].map(([label, val]) => (
+                    <div key={label} className="border-bottom pb-2">
+                      <label className="form-label text-muted small fw-bold text-uppercase mb-0">{label}</label>
+                      <div className="text-dark fw-semibold">{val}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="modal-footer bg-light">
+                <button type="button" className="btn btn-outline-secondary" onClick={() => setPreview(null)}>Close</button>
+                <button 
+                  type="button" 
+                  className="btn btn-primary text-white" 
+                  style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}
+                  onClick={() => { handleExport(preview); setPreview(null); }}
+                >
+                  <i className="bi bi-file-earmark-pdf me-2"></i>Download PDF
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
-      <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
-        <div>
-          <h5 className="text-white font-monospace text-uppercase mb-1">Itineraries</h5>
-          <small className="text-light font-monospace">Travel Planning System</small>
-        </div>
-        <div className="d-flex align-items-center gap-3">
-          <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
-          <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
-            <i className="fa-solid fa-plus me-2" />New Itinerary
-          </button>
-        </div>
-      </div>
-      <div className="table-responsive">
-        <table className="table table-dark table-hover align-middle rounded-0 border-secondary">
-          <thead className="bg-info text-dark">
-            <tr>
-              <th className="font-monospace text-uppercase small border-secondary">Title</th>
-              <th className="font-monospace text-uppercase small border-secondary">Start</th>
-              <th className="font-monospace text-uppercase small border-secondary">End</th>
-              <th className="font-monospace text-uppercase small border-secondary">Status</th>
-              {!isTraveler && <th className="font-monospace text-uppercase small border-secondary">Change Status</th>}
-              <th className="font-monospace text-uppercase small border-secondary">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {itins.map(i => (
-              <React.Fragment key={i.itineraryId}>
-                <tr className="border-secondary bg-dark">
-                  <td className="text-secondary font-monospace border-secondary bg-darker">{i.title || i.itineraryId}</td>
-                  <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(i.startDate)}</td>
-                  <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(i.endDate)}</td>
-                  <td className="border-secondary bg-darker">{statusBadge(i.status)}</td>
-                  {!isTraveler && (
-                    <td className="border-secondary bg-darker">
-                      <select className="form-select form-select-sm bg-dark text-white border-secondary rounded-0" style={{ width: 130 }} value={i.status}
-                        onChange={e => handleStatus(i.itineraryId, e.target.value)}>
-                        {STATUS_OPTIONS.map(s => <option key={s} value={s} className="bg-dark text-white">{STATUS_MAP[s]}</option>)}
-                      </select>
-                    </td>
-                  )}
-                  <td className="border-secondary bg-darker">
-                    <div className="btn-group btn-group-sm">
-                      <button className="btn btn-outline-secondary rounded-0" title="Preview & Export PDF" onClick={() => setPreview(i)}><i className="fa-solid fa-file-pdf" /></button>
-                      <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(i)}><i className="fa-solid fa-pen" /></button>
-                      <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(i.itineraryId)}><i className="fa-solid fa-trash" /></button>
-                    </div>
-                  </td>
-                </tr>
-              </React.Fragment>
-            ))}
-            {itins.length === 0 && (
-              <tr>
-                <td colSpan={isTraveler ? 5 : 6} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
-                  <i className="fa-solid fa-map me-2"></i>
-                  <span className="font-monospace">No itineraries found in system registry.</span>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
 
+      {/* Main Creation/Editing Form Modal */}
       {showModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
-          <div className="modal-dialog">
-            <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleSubmit}>
-              <div className="modal-header bg-dark border-secondary">
+        <div className="modal show d-block" tabIndex="-1" role="dialog" style={{ background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)' }}>
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <form className="modal-content border-0 shadow-lg" onSubmit={handleSubmit}>
+              <div className="modal-header text-white" style={{ backgroundColor: '#6f42c1' }}>
                 <div>
-                  <h5 className="text-white font-monospace text-uppercase mb-1">{editItin ? 'Edit Itinerary' : 'New Itinerary'}</h5>
-                  <small className="text-light font-monospace">Travel Planning System</small>
+                  <h5 className="modal-title fw-bold">
+                    <i className={`bi ${editItin ? 'bi-pencil-square' : 'bi-plus-circle-fill'} me-2`}></i>
+                    {editItin ? 'Edit Itinerary' : 'New Itinerary'}
+                  </h5>
                 </div>
-                <div className="d-flex align-items-center gap-2">
-                  <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
-                  <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)} />
-                </div>
+                <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setShowModal(false)} />
               </div>
-              <div className="modal-body bg-dark">
+              <div className="modal-body p-4">
                 <div className="d-flex flex-column gap-3">
                   <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Title</label>
-                    <input className="form-control bg-dark text-white border-secondary rounded-0" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
+                    <label className="form-label text-muted small fw-bold text-uppercase">Title</label>
+                    <input className="form-control" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required />
                   </div>
                   <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Description</label>
-                    <textarea className="form-control bg-dark text-white border-secondary rounded-0" rows={2} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+                    <label className="form-label text-muted small fw-bold text-uppercase">Description</label>
+                    <textarea className="form-control" rows={2} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
                   </div>
                   <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Start Date</label>
-                    <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} required />
+                    <label className="form-label text-muted small fw-bold text-uppercase">Start Date</label>
+                    <input type="date" className="form-control" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} required />
                   </div>
                   <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">End Date</label>
-                    <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} required />
+                    <label className="form-label text-muted small fw-bold text-uppercase">End Date</label>
+                    <input type="date" className="form-control" value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} required />
                   </div>
                 </div>
               </div>
-              <div className="modal-footer bg-dark border-secondary">
-                <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-outline-info rounded-0 font-monospace text-uppercase">
-                  <i className="fa-solid fa-save me-2"></i>Save Itinerary
+              <div className="modal-footer bg-light">
+                <button type="button" className="btn btn-outline-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary text-white" style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}>
+                  <i className="bi bi-save me-2"></i>Save Itinerary
                 </button>
               </div>
             </form>

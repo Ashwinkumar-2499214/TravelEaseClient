@@ -213,167 +213,172 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
   }
 
   if (loading) return (
-    <div className="d-flex justify-content-center py-5">
-      <div className="spinner-border text-primary" role="status">
+    <div className="d-flex justify-content-center align-items-center py-5">
+      <div className="spinner-border" style={{ color: 'var(--te-purple-700)' }} role="status">
         <span className="visually-hidden">Loading...</span>
       </div>
     </div>
   )
 
-  if (error) return <div className="alert alert-danger mb-4">{error}</div>
+  if (error) return <div className="alert alert-danger mb-4 border-left border-4" style={{ borderLeftColor: 'var(--te-status-danger)' }}>{error}</div>
 
   return (
     <div>
       {/* Header */}
-      <div className="card card-purple-accent mb-4 border-left" style={{ borderLeft: '4px solid #7e22ce' }}>
-        <div className="card-body">
-          <div className="row align-items-center">
-            <div className="col-auto">
+      <div className="card card-purple mb-4" style={{ borderLeft: '4px solid var(--te-purple-700)' }}>
+        <div className="card-body p-4">
+          <div className="d-flex align-items-center justify-content-between gap-3">
+            <div className="d-flex align-items-center gap-3">
               <div
-                className="rounded-circle d-flex align-items-center justify-content-center text-white"
-                style={{ width: '50px', height: '50px', backgroundColor: '#7e22ce' }}
+                className="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                style={{ width: '50px', height: '50px', backgroundColor: 'var(--te-purple-700)', minWidth: '50px' }}
               >
                 <i className="bi bi-briefcase-fill" style={{ fontSize: '1.5rem' }}></i>
               </div>
-            </div>
-            <div className="col">
-              <h5 className="mb-1" style={{ color: '#7e22ce', fontWeight: 700 }}>
-                {agentMode ? 'Bookings (Agent View)' : 'My Bookings'}
-              </h5>
-              <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>
-                Hotel booking management system
-              </p>
+              <div>
+                <h5 className="mb-1 text-purple" style={{ fontWeight: 700 }}>
+                  {agentMode ? 'Bookings (Agent View)' : 'My Bookings'}
+                </h5>
+                <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>
+                  Hotel booking management system
+                </p>
+              </div>
             </div>
             {!isTravelAgent && (
-              <div className="col-auto">
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={openCreate}
-                  style={{ backgroundColor: '#7e22ce', borderColor: '#7e22ce' }}
-                >
-                  <i className="bi bi-plus-circle me-2"></i>New Booking
-                </button>
-              </div>
+              <button
+                className="btn btn-primary btn-sm flex-shrink-0"
+                onClick={openCreate}
+                style={{ backgroundColor: 'var(--te-purple-700)', borderColor: 'var(--te-purple-700)' }}
+              >
+                <i className="bi bi-plus-circle me-2"></i>New Booking
+              </button>
             )}
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="table-responsive">
-        <table className="table table-hover align-middle mb-0">
-          <thead className="table-light">
-            <tr style={{ backgroundColor: '#7e22ce' }}>
-              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Hotel</th>
-              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Room Type</th>
-              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Check-In</th>
-              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Check-Out</th>
-              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Guests</th>
-              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Amount</th>
-              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Status</th>
-              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bookings.length === 0 ? (
+      <div className="card border-0 shadow-sm">
+        <div className="table-responsive">
+          <table className="table table-hover align-middle mb-0">
+            <thead style={{ backgroundColor: 'var(--te-purple-700)' }}>
               <tr>
-                <td colSpan="8" className="text-center py-5 text-muted">
-                  <i className="bi bi-inbox" style={{ fontSize: '2rem' }}></i>
-                  <p className="mt-2">No bookings found</p>
-                </td>
+                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Hotel</th>
+                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Room Type</th>
+                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Check-In</th>
+                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Check-Out</th>
+                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Guests</th>
+                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Amount</th>
+                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Status</th>
+                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Actions</th>
               </tr>
-            ) : (
-              bookings.map((booking) => {
-                const bid = booking.bookingId ?? booking.id
-                const statusColor = STATUS_COLORS[Number(booking.status)]
-                return (
-                  <React.Fragment key={bid}>
-                    <tr style={{ backgroundColor: expandedId === bid ? '#f9fafb' : 'transparent' }}>
-                      <td>{booking.itemType || booking.hotelName || '-'}</td>
-                      <td>{booking.roomType || '-'}</td>
-                      <td>{formatDate(booking.checkInDate)}</td>
-                      <td>{formatDate(booking.checkOutDate)}</td>
-                      <td>{booking.numberOfGuests || '-'}</td>
-                      <td className="fw-600">${Number(booking.amount || 0).toFixed(2)}</td>
-                      <td>
-                        <span className={`badge bg-${statusColor}`}>
-                          {STATUS_MAP[Number(booking.status)] || booking.status}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="btn-group btn-group-sm" role="group">
-                          <button
-                            className="btn btn-outline-secondary"
-                            onClick={() => setExpandedId(expandedId === bid ? null : bid)}
-                            title="Expand details"
-                          >
-                            <i className={`bi ${expandedId === bid ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
-                          </button>
-                          <button
-                            className="btn btn-outline-primary"
-                            onClick={() => openEdit(booking)}
-                            disabled={isTravelAgent}
-                            title="Edit booking"
-                          >
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button
-                            className="btn btn-outline-success"
-                            onClick={() => openPay(booking)}
-                            disabled={isTravelAgent}
-                            title="Create payment"
-                          >
-                            <i className="bi bi-credit-card"></i>
-                          </button>
-                          <button
-                            className="btn btn-outline-danger"
-                            onClick={() => handleDelete(bid)}
-                            disabled={isTravelAgent}
-                            title="Delete booking"
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    {expandedId === bid && (
-                      <tr style={{ backgroundColor: '#f0f4f8' }}>
-                        <td colSpan="8">
-                          <div className="p-3">
-                            <div className="row g-3">
-                              <div className="col-md-6">
-                                <small className="text-muted fw-600">Booked By</small>
-                                <p className="mb-0">{booking.userName || currentUser?.name || '-'}</p>
-                              </div>
-                              <div className="col-md-6">
-                                <small className="text-muted fw-600">Booking Date</small>
-                                <p className="mb-0">{formatDate(booking.bookingDate)}</p>
-                              </div>
-                              <div className="col-12">
-                                <small className="text-muted fw-600">Special Requests</small>
-                                <p className="mb-0">{booking.specialRequests || '-'}</p>
-                              </div>
-                            </div>
+            </thead>
+            <tbody>
+              {bookings.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-5">
+                    <i className="bi bi-inbox" style={{ fontSize: '2rem', color: 'var(--te-gray-400)' }}></i>
+                    <p className="mt-2 text-muted" style={{ fontSize: '0.95rem' }}>No bookings found</p>
+                  </td>
+                </tr>
+              ) : (
+                bookings.map((booking) => {
+                  const bid = booking.bookingId ?? booking.id
+                  const statusColor = STATUS_COLORS[Number(booking.status)]
+                  return (
+                    <React.Fragment key={bid}>
+                      <tr style={{ backgroundColor: expandedId === bid ? 'var(--te-purple-50)' : 'transparent' }}>
+                        <td className="fw-500">{booking.itemType || booking.hotelName || '-'}</td>
+                        <td>{booking.roomType || '-'}</td>
+                        <td>{formatDate(booking.checkInDate)}</td>
+                        <td>{formatDate(booking.checkOutDate)}</td>
+                        <td>{booking.numberOfGuests || '-'}</td>
+                        <td className="fw-600 text-purple">${Number(booking.amount || 0).toFixed(2)}</td>
+                        <td>
+                          <span className={`badge bg-${statusColor}`} style={{ fontSize: '0.8rem', fontWeight: 500 }}>
+                            {STATUS_MAP[Number(booking.status)] || booking.status}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="btn-group btn-group-sm" role="group">
+                            <button
+                              className="btn btn-outline-secondary btn-sm"
+                              onClick={() => setExpandedId(expandedId === bid ? null : bid)}
+                              title="Expand details"
+                              style={{ borderColor: 'var(--te-gray-300)', color: 'var(--te-gray-600)' }}
+                            >
+                              <i className={`bi ${expandedId === bid ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                            </button>
+                            <button
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() => openEdit(booking)}
+                              disabled={isTravelAgent}
+                              title="Edit booking"
+                              style={{ borderColor: 'var(--te-purple-700)', color: 'var(--te-purple-700)' }}
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </button>
+                            <button
+                              className="btn btn-outline-success btn-sm"
+                              onClick={() => openPay(booking)}
+                              disabled={isTravelAgent}
+                              title="Create payment"
+                              style={{ borderColor: 'var(--te-status-success)', color: 'var(--te-status-success)' }}
+                            >
+                              <i className="bi bi-credit-card"></i>
+                            </button>
+                            <button
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() => handleDelete(bid)}
+                              disabled={isTravelAgent}
+                              title="Delete booking"
+                              style={{ borderColor: 'var(--te-status-danger)', color: 'var(--te-status-danger)' }}
+                            >
+                              <i className="bi bi-trash"></i>
+                            </button>
                           </div>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                )
-              })
-            )}
-          </tbody>
-        </table>
+                      {expandedId === bid && (
+                        <tr style={{ backgroundColor: 'var(--te-gray-50)' }}>
+                          <td colSpan="8">
+                            <div className="p-4">
+                              <div className="row g-3">
+                                <div className="col-md-6">
+                                  <small className="text-muted fw-600" style={{ fontSize: '0.8rem' }}>Booked By</small>
+                                  <p className="mb-0 mt-1" style={{ fontSize: '0.95rem' }}>{booking.userName || currentUser?.name || '-'}</p>
+                                </div>
+                                <div className="col-md-6">
+                                  <small className="text-muted fw-600" style={{ fontSize: '0.8rem' }}>Booking Date</small>
+                                  <p className="mb-0 mt-1" style={{ fontSize: '0.95rem' }}>{formatDate(booking.bookingDate)}</p>
+                                </div>
+                                <div className="col-12">
+                                  <small className="text-muted fw-600" style={{ fontSize: '0.8rem' }}>Special Requests</small>
+                                  <p className="mb-0 mt-1" style={{ fontSize: '0.95rem' }}>{booking.specialRequests || '-'}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal: New/Edit Booking */}
       {showModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,.5)' }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg">
               <form onSubmit={handleSubmit}>
-                <div className="modal-header" style={{ backgroundColor: '#7e22ce', borderColor: '#7e22ce' }}>
-                  <h5 className="modal-title text-white" style={{ fontWeight: 700 }}>
+                <div className="modal-header bg-purple text-white border-0 p-4">
+                  <h5 className="modal-title fw-600">
+                    <i className="bi bi-briefcase me-2"></i>
                     {editBooking ? 'Edit Booking' : 'New Booking'}
                   </h5>
                   <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)}></button>
@@ -422,15 +427,15 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                   </div>
                   <div className="mb-3">
                     <label className="form-label fw-600">Special Requests</label>
-                    <textarea className="form-control" rows={3} value={form.specialRequests} onChange={(e) => setForm(prev => ({...prev, specialRequests: e.target.value}))} />
+                    <textarea className="form-control" rows={3} value={form.specialRequests} onChange={(e) => setForm(prev => ({...prev, specialRequests: e.target.value}))} placeholder="Enter any special requests..." />
                   </div>
-                  <div className="alert alert-info mb-0">
-                    <strong>Estimated Amount:</strong> ${bookingAmountEstimate.toFixed(2)}
+                  <div className="alert alert-info mb-0 border-left border-4" style={{ borderLeftColor: 'var(--te-status-info)' }}>
+                    <strong>Estimated Amount:</strong> <span className="fw-600 text-purple">${bookingAmountEstimate.toFixed(2)}</span>
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div className="modal-footer bg-gray-50 border-top p-4">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#7e22ce', borderColor: '#7e22ce' }}>
+                  <button type="submit" className="btn btn-primary" style={{ backgroundColor: 'var(--te-purple-700)', borderColor: 'var(--te-purple-700)' }}>
                     <i className="bi bi-check-circle me-2"></i>Save Booking
                   </button>
                 </div>
@@ -442,15 +447,16 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
 
       {/* Modal: Payment */}
       {showPayModal && payBooking && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header" style={{ backgroundColor: '#7e22ce', borderColor: '#7e22ce' }}>
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header bg-purple text-white border-0 p-4">
                 <div>
-                  <h5 className="modal-title text-white" style={{ fontWeight: 700, marginBottom: 0 }}>
+                  <h5 className="modal-title fw-600 mb-1">
+                    <i className="bi bi-credit-card me-2"></i>
                     Create Invoice & Payment
                   </h5>
-                  <small className="text-white-50">Booking #{payBooking.bookingId ?? payBooking.id} — ${Number(payBooking.amount ?? 0).toFixed(2)}</small>
+                  <small style={{ opacity: 0.9 }}>Booking #{payBooking.bookingId ?? payBooking.id} — ${Number(payBooking.amount ?? 0).toFixed(2)}</small>
                 </div>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowPayModal(false)}></button>
               </div>
@@ -459,7 +465,7 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                   <form onSubmit={handleCreateInvoice}>
                     <div className="mb-3">
                       <label className="form-label fw-600">Amount</label>
-                      <div className="form-control-plaintext fw-600">${Number(payBooking.amount ?? 0).toFixed(2)}</div>
+                      <div className="p-3 bg-gray-50 rounded-md fw-600 text-purple" style={{ fontSize: '1.1rem' }}>${Number(payBooking.amount ?? 0).toFixed(2)}</div>
                     </div>
                     <div className="mb-3">
                       <label className="form-label fw-600">Due Date</label>
@@ -467,9 +473,9 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                     </div>
                     <div className="mb-3">
                       <label className="form-label fw-600">Description</label>
-                      <textarea className="form-control" rows={3} value={payForm.description} onChange={(e) => setPayForm(prev => ({...prev, description: e.target.value}))} />
+                      <textarea className="form-control" rows={3} value={payForm.description} onChange={(e) => setPayForm(prev => ({...prev, description: e.target.value}))} placeholder="Enter invoice description..." />
                     </div>
-                    <div className="modal-footer">
+                    <div className="modal-footer bg-gray-50 border-top p-4">
                       <button type="button" className="btn btn-secondary" onClick={() => setShowPayModal(false)}>Cancel</button>
                       <button type="submit" className="btn btn-success" disabled={paying}>
                         {paying ? <span className="spinner-border spinner-border-sm me-2"></span> : <i className="bi bi-file-earmark-text me-2"></i>}
@@ -479,7 +485,7 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                   </form>
                 ) : !paymentResult ? (
                   <form onSubmit={handleSubmitPayment}>
-                    <div className="alert alert-success mb-4">
+                    <div className="alert alert-success mb-4 border-left border-4" style={{ borderLeftColor: 'var(--te-status-success)' }}>
                       <i className="bi bi-check-circle me-2"></i>Invoice #{payResult.invoiceId ?? payResult.id} created successfully
                     </div>
                     <div className="row g-3 mb-3">
@@ -494,14 +500,14 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                       </div>
                       <div className="col-md-6">
                         <label className="form-label fw-600">Gateway Provider</label>
-                        <input className="form-control" value={paymentForm.gatewayProvider} onChange={(e) => setPaymentForm(prev => ({...prev, gatewayProvider: e.target.value}))} />
+                        <input className="form-control" placeholder="e.g. Stripe, PayPal" value={paymentForm.gatewayProvider} onChange={(e) => setPaymentForm(prev => ({...prev, gatewayProvider: e.target.value}))} />
                       </div>
                     </div>
                     <div className="mb-3">
                       <label className="form-label fw-600">Transaction Reference</label>
                       <input className="form-control" placeholder="e.g. TXN1234567890" value={paymentForm.transactionReference} onChange={(e) => setPaymentForm(prev => ({...prev, transactionReference: e.target.value}))} required />
                     </div>
-                    <div className="modal-footer">
+                    <div className="modal-footer bg-gray-50 border-top p-4">
                       <button type="button" className="btn btn-secondary" onClick={() => { setShowPayModal(false); setPayResult(null) }}>Cancel</button>
                       <button type="submit" className="btn btn-success" disabled={submittingPayment}>
                         {submittingPayment ? <span className="spinner-border spinner-border-sm me-2"></span> : <i className="bi bi-credit-card me-2"></i>}
@@ -511,36 +517,36 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                   </form>
                 ) : (
                   <div>
-                    <div className="alert alert-success mb-4">
+                    <div className="alert alert-success mb-4 border-left border-4" style={{ borderLeftColor: 'var(--te-status-success)' }}>
                       <i className="bi bi-check-circle me-2"></i>Payment processed successfully!
                     </div>
                     <div className="table-responsive mb-4">
-                      <table className="table table-sm mb-0">
+                      <table className="table table-sm table-bordered mb-0">
                         <tbody>
                           <tr>
-                            <th className="fw-600">Payment ID</th>
+                            <th className="fw-600 bg-gray-50" style={{ width: '150px' }}>Payment ID</th>
                             <td>{paymentResult.paymentId ?? paymentResult.id}</td>
                           </tr>
                           <tr>
-                            <th className="fw-600">Invoice ID</th>
+                            <th className="fw-600 bg-gray-50">Invoice ID</th>
                             <td>{paymentResult.invoiceId}</td>
                           </tr>
                           <tr>
-                            <th className="fw-600">Amount</th>
-                            <td>${Number(paymentResult.amount).toFixed(2)}</td>
+                            <th className="fw-600 bg-gray-50">Amount</th>
+                            <td className="text-purple fw-600">${Number(paymentResult.amount).toFixed(2)}</td>
                           </tr>
                           <tr>
-                            <th className="fw-600">Method</th>
+                            <th className="fw-600 bg-gray-50">Method</th>
                             <td>{paymentResult.method}</td>
                           </tr>
                           <tr>
-                            <th className="fw-600">Status</th>
+                            <th className="fw-600 bg-gray-50">Status</th>
                             <td><span className="badge bg-success">{paymentResult.status}</span></td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
-                    <div className="modal-footer">
+                    <div className="modal-footer bg-gray-50 border-top p-4">
                       <button type="button" className="btn btn-secondary" onClick={() => { setShowPayModal(false); setPayResult(null); setPaymentResult(null) }}>Close</button>
                     </div>
                   </div>

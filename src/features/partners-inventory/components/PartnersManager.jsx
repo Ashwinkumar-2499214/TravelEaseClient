@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../authentication/AuthProvider'
 import partnersService from '../services/partnersService'
 import inventoryService from '../services/inventoryService'
- 
+
 const PARTNER_TYPES = [{ value: 1, label: 'Hotel' }, { value: 2, label: 'Transport Provider' }, { value: 3, label: 'Tour Operator' }]
 const PARTNER_STATUSES = [{ value: 1, label: 'Active' }, { value: 2, label: 'Inactive' }]
- 
+
 const getTypeLabel = (val) => PARTNER_TYPES.find(t => t.value === Number(val))?.label ?? val
 const getStatusLabel = (val) => PARTNER_STATUSES.find(s => s.value === Number(val))?.label ?? val
- 
+
 const EMPTY = { name: '', type: '', status: 1, contactEmail: '', contactPhone: '', address: '' }
- 
+
 export default function PartnersManager({ agentMode = false }) {
   const { currentUser } = useAuth()
   const isAdmin = currentUser?.role === 'Admin'
@@ -23,41 +23,41 @@ export default function PartnersManager({ agentMode = false }) {
   const [form, setForm] = useState(EMPTY)
   const [expandedId, setExpandedId] = useState(null)
   const [searchInput, setSearchInput] = useState('')
- 
+
   const load = (searchVal = searchInput) => {
     setLoading(true)
     setError(null)
- 
+
     const queryParams = {}
     const finalSearch = searchVal.trim()
-   
+
     queryParams.SearchTerm = finalSearch === '' ? 'a' : finalSearch
- 
+
     partnersService.list(queryParams)
       .then(setPartners)
       .catch(e => setError(e.response?.data?.title || e.message))
       .finally(() => setLoading(false))
   }
- 
+
   useEffect(() => { load() }, [])
- 
+
   const handleSearchSubmit = (e) => {
     e.preventDefault()
     load(searchInput)
   }
- 
+
   const handleClearSearch = () => {
     setSearchInput('')
     load('')
   }
- 
+
   const openCreate = () => { setEditPartner(null); setForm(EMPTY); setShowModal(true) }
   const openEdit = (p) => {
     setEditPartner(p)
     setForm({ name: p.name || '', type: p.type || '', status: p.status || 1, contactEmail: p.contactEmail || '', contactPhone: p.contactPhone || '', address: p.address || '' })
     setShowModal(true)
   }
- 
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
@@ -66,13 +66,13 @@ export default function PartnersManager({ agentMode = false }) {
       setShowModal(false); load()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
- 
+
   const handleDelete = async (id) => {
     if (!window.confirm('Delete partner?')) return
     try { await partnersService.remove(id); load() }
     catch (err) { alert(err?.response?.data?.message || err.message) }
   }
- 
+
   const toggleStatus = async (p) => {
     const partnerId = p.id || p.PartnerId || p.partnerId || p._id
     const currentStatus = Number(p.status)
@@ -80,10 +80,10 @@ export default function PartnersManager({ agentMode = false }) {
     try { await partnersService.patchStatus(partnerId, next); load() }
     catch (err) { alert(err?.response?.data?.message || err.message) }
   }
- 
+
   if (loading) return <div className="text-center py-4"><div className="spinner-border" /></div>
   if (error) return <div className="alert alert-danger m-3">{error}</div>
- 
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
@@ -103,7 +103,7 @@ export default function PartnersManager({ agentMode = false }) {
           <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
         )}
       </div>
- 
+
       <form onSubmit={handleSearchSubmit} className="d-flex gap-2 mb-4 p-2 bg-secondary bg-opacity-10 border-secondary rounded-0">
         <input
           type="text"
@@ -123,7 +123,7 @@ export default function PartnersManager({ agentMode = false }) {
           </button>
         )}
       </form>
- 
+
       <div className="table-responsive">
         <table className="table table-dark table-hover align-middle rounded-0 border-secondary">
           <thead className="bg-info text-dark">
@@ -176,7 +176,7 @@ export default function PartnersManager({ agentMode = false }) {
           </tbody>
         </table>
       </div>
- 
+
       {showModal && (
         <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
           <div className="modal-dialog">
@@ -231,7 +231,7 @@ export default function PartnersManager({ agentMode = false }) {
     </div>
   )
 }
- 
+
 function PartnerInventoryRow({ partnerId, isAdmin: hideActions }) {
   const [inventory, setInventory] = useState([])
   const [loading, setLoading] = useState(true)
@@ -240,7 +240,7 @@ function PartnerInventoryRow({ partnerId, isAdmin: hideActions }) {
   const [editItem, setEditItem] = useState(null)
   const [mediaManager, setMediaManager] = useState({ showMedia: false, itemId: null })
   const [form, setForm] = useState({ itemType: '', description: '', price: '', availability: '', status: 'Available' })
- 
+
   const INVENTORY_STATUSES = [
     { value: 'Available', label: 'Available' },
     { value: 'Limited', label: 'Limited' },
@@ -248,16 +248,16 @@ function PartnerInventoryRow({ partnerId, isAdmin: hideActions }) {
     { value: 'Unavailable', label: 'Unavailable' },
     { value: 'Maintenance', label: 'Maintenance' },
   ]
- 
+
   const loadInv = () => {
     if (!partnerId) {
       setLoading(false)
       return Promise.resolve([])
     }
-    return partnersService.listInventory(partnerId).then(setInventory).catch(() => {}).finally(() => setLoading(false))
+    return partnersService.listInventory(partnerId).then(setInventory).catch(() => { }).finally(() => setLoading(false))
   }
   useEffect(() => { loadInv() }, [partnerId])
- 
+
   const addItem = async (e) => {
     e.preventDefault()
     if (!partnerId) {
@@ -271,7 +271,7 @@ function PartnerInventoryRow({ partnerId, isAdmin: hideActions }) {
       loadInv()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
- 
+
   const openEditItem = (item) => {
     setEditItem(item)
     setForm({
@@ -283,7 +283,7 @@ function PartnerInventoryRow({ partnerId, isAdmin: hideActions }) {
     })
     setShowEdit(true)
   }
- 
+
   const updateItem = async (e) => {
     e.preventDefault()
     if (!partnerId || !editItem) {
@@ -297,7 +297,7 @@ function PartnerInventoryRow({ partnerId, isAdmin: hideActions }) {
       setForm({ itemType: '', description: '', price: '', availability: '', status: 'Available' })
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
- 
+
   const handleDeleteItem = async (inventoryId) => {
     if (!window.confirm('Delete this inventory item?')) return
     try {
@@ -305,7 +305,7 @@ function PartnerInventoryRow({ partnerId, isAdmin: hideActions }) {
       loadInv()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
- 
+
   const handleStatusChange = async (inventoryId, newStatus) => {
     const prev = inventory.find(i => i.inventoryId === inventoryId)
     setInventory(prev => prev.map(i => i.inventoryId === inventoryId ? { ...i, status: newStatus } : i))
@@ -317,11 +317,11 @@ function PartnerInventoryRow({ partnerId, isAdmin: hideActions }) {
       loadInv()
     }
   }
- 
+
   const handleOpenMediaManager = (item) => {
     setMediaManager({ showMedia: true, itemId: item.inventoryId })
   }
- 
+
   return (
     <tr className="bg-secondary bg-opacity-25 border-secondary">
       <td colSpan={6} className="ps-5 border-secondary">
@@ -526,13 +526,13 @@ function PartnerInventoryRow({ partnerId, isAdmin: hideActions }) {
     </tr>
   )
 }
- 
+
 function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
   const [media, setMedia] = useState([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
- 
+
   const loadMedia = () => {
     setLoading(true)
     // Fetch media - the API returns inventory with media array
@@ -544,16 +544,16 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
       .catch(() => setMedia([]))
       .finally(() => setLoading(false))
   }
- 
+
   useEffect(() => { loadMedia() }, [partnerId, inventoryId])
- 
+
   const handleUpload = async (e) => {
     e.preventDefault()
     if (!selectedFile) {
       alert('Please select a file first')
       return
     }
- 
+
     setUploading(true)
     try {
       await inventoryService.uploadMedia(partnerId, inventoryId, selectedFile)
@@ -567,7 +567,7 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
       setUploading(false)
     }
   }
- 
+
   const handleDelete = async (mediaId) => {
     if (!window.confirm('Delete this media?')) return
     try {
@@ -581,9 +581,9 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
         }
       )
 
- 
+
       if (!response.ok) throw new Error('Delete failed')
-     
+
       alert('Media deleted successfully!')
       loadMedia()
       onUpdated?.()
@@ -591,77 +591,294 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
       alert(err.message || 'Failed to delete media')
     }
   }
- 
+
   return (
-    <tr className="bg-secondary bg-opacity-25 border-secondary">
-      <td colSpan={6} className="ps-5 border-secondary">
-        <div className="d-flex align-items-center mb-3">
-          <i className="fa-solid fa-images text-info me-2"></i>
-          <strong className="text-white font-monospace text-uppercase">Media Gallery</strong>
-          <div className="ms-auto">
-            <button className="btn btn-outline-secondary btn-sm rounded-0 font-monospace" onClick={onClose}>
-              <i className="fa-solid fa-times me-1"></i>Close
-            </button>
+    <div className="container-fluid py-4">
+
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+          <h2
+            className="fw-bold mb-2"
+            style={{ color: "#6f42c1" }}
+          >
+            <i className="bi bi-building-fill me-2"></i>
+            Partner Management
+          </h2>
+
+          <p className="text-muted mb-0">
+            Vendor Registry & Inventory Management
+          </p>
+        </div>
+
+        {!hideActions && (
+          <button
+            className="btn btn-primary btn-sm"
+            style={{
+              backgroundColor: "#6f42c1",
+              borderColor: "#6f42c1"
+            }}
+            onClick={openCreate}
+          >
+            <i className="bi bi-plus-circle-fill me-2"></i>
+            Add Partner
+          </button>
+        )}
+      </div>
+
+      {/* Search */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <form
+          onSubmit={handleSearchSubmit}
+          className="d-flex gap-2"
+        >
+          <input
+            type="text"
+            className="form-control form-control-sm shadow-sm"
+            placeholder="Search partners..."
+            style={{ width: 250 }}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+
+          <button
+            type="submit"
+            className="btn btn-outline-secondary btn-sm"
+          >
+            Search
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-outline-danger btn-sm"
+            onClick={handleClearSearch}
+          >
+            Clear
+          </button>
+        </form>
+      </div>
+
+      {/* Loading */}
+      {loading ? (
+        <div className="text-center py-5">
+          <div
+            className="spinner-border"
+            style={{ color: "#6f42c1" }}
+          >
+            <span className="visually-hidden">
+              Loading...
+            </span>
           </div>
         </div>
- 
-        {loading ? (
-          <div className="d-flex align-items-center text-light font-monospace">
-            <div className="spinner-border spinner-border-sm me-2" />
-            <span>Loading media...</span>
+      ) : (
+        <div className="card border-0 shadow-sm">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th className="ps-4">Name</th>
+                  <th>Type</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+
+                  {!hideActions && (
+                    <th className="text-end pe-4">
+                      Actions
+                    </th>
+                  )}
+                </tr>
+              </thead>
+
+              <tbody>
+                {partners.map((p) => {
+                  const partnerId =
+                    p.id ||
+                    p.PartnerId ||
+                    p.partnerId ||
+                    p._id
+
+                  return (
+                    <React.Fragment key={partnerId}>
+                      <tr>
+                        <td className="ps-4 fw-semibold">
+
+                          <button
+                            className="btn btn-link btn-sm text-decoration-none"
+                            onClick={() =>
+                              setExpandedId(
+                                expandedId === partnerId
+                                  ? null
+                                  : partnerId
+                              )
+                            }
+                          >
+                            <i
+                              className={`bi ${expandedId === partnerId
+                                  ? "bi-chevron-down"
+                                  : "bi-chevron-right"
+                                }`}
+                            />
+                          </button>
+
+                          {p.name}
+                        </td>
+
+                        <td>
+                          <span
+                            className="badge text-white"
+                            style={{
+                              backgroundColor:
+                                "#6f42c1"
+                            }}
+                          >
+                            {getTypeLabel(p.type)}
+                          </span>
+                        </td>
+
+                        <td>{p.contactEmail}</td>
+
+                        <td>{p.contactPhone}</td>
+
+                        <td>
+                          {Number(p.status) === 1 ? (
+                            <span className="badge bg-success">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="badge bg-danger">
+                              Inactive
+                            </span>
+                          )}
+                        </td>
+
+                        {!hideActions && (
+                          <td className="text-end pe-4">
+                            <div className="d-flex gap-2 justify-content-end">
+
+                              <button
+                                className="btn btn-sm btn-outline-success"
+                                onClick={() =>
+                                  toggleStatus(p)
+                                }
+                              >
+                                <i className="bi bi-toggle-on" />
+                              </button>
+
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() =>
+                                  openEdit(p)
+                                }
+                              >
+                                <i className="bi bi-pencil" />
+                              </button>
+
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() =>
+                                  handleDelete(
+                                    partnerId
+                                  )
+                                }
+                              >
+                                <i className="bi bi-trash" />
+                              </button>
+
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+
+                      {expandedId === partnerId && (
+                        <PartnerInventoryRow
+                          partnerId={partnerId}
+                          isAdmin={hideActions}
+                        />
+                      )}
+                    </React.Fragment>
+                  )
+                })}
+
+                {partners.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={
+                        hideActions ? 5 : 6
+                      }
+                      className="text-center py-5 text-muted"
+                    >
+                      <i className="bi bi-building fs-4 d-block mb-2"></i>
+                      No partners found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <>
-            <div className="mb-3">
-              <form onSubmit={handleUpload} className="d-flex gap-2 p-3 bg-info bg-opacity-10 border-info rounded-0">
-                <input
-                  type="file"
-                  className="form-control form-control-sm bg-dark text-light border-info rounded-0"
-                  accept="image/*,video/*"
-                  onChange={e => setSelectedFile(e.target.files?.[0])}
-                  disabled={uploading}
-                />
-                <button type="submit" className="btn btn-info btn-sm rounded-0 font-monospace text-uppercase" disabled={uploading || !selectedFile}>
-                  {uploading ? <><span className="spinner-border spinner-border-sm me-2" role="status"></span>Uploading...</> : <><i className="fa-solid fa-upload me-1"></i>Upload</>}
-                </button>
-              </form>
+        </div>
+      )}
+
+      {/* Statistics */}
+      <div className="row mt-5">
+
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3
+                style={{
+                  color: "#6f42c1"
+                }}
+              >
+                {partners.length}
+              </h3>
+
+              <small className="text-muted">
+                Total Partners
+              </small>
             </div>
- 
-            <div className="row g-2">
-              {media.length > 0 ? media.map(m => (
-                <div key={m.mediaId} className="col-md-3">
-                  <div className="card bg-dark border-secondary">
-                    {m.mediaType === 'image' ? (
-                      <img src={`${import.meta.env.VITE_API_BASE_URL}${m.url}`} className="card-img-top" alt={m.fileName} style={{ maxHeight: 150, objectFit: 'cover' }} />
-                    ) : (
-                      <div className="bg-secondary d-flex align-items-center justify-content-center" style={{ height: 150 }}>
-                        <i className="fa-solid fa-video text-info" style={{ fontSize: '2rem' }}></i>
-                      </div>
-                    )}
-                    <div className="card-body p-2">
-                      <small className="text-light d-block text-truncate">{m.fileName}</small>
-                      <div className="btn-group btn-group-sm mt-2 w-100">
-                        <button
-                          className="btn btn-outline-danger btn-sm rounded-0 w-100"
-                          onClick={() => handleDelete(m.mediaId)}
-                          title="Delete"
-                        >
-                          <i className="fa-solid fa-trash me-1"></i>Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )) : (
-                <div className="col">
-                  <p className="text-muted text-center">No media uploaded yet</p>
-                </div>
-              )}
+          </div>
+        </div>
+
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3 className="text-success">
+                {
+                  partners.filter(
+                    (p) =>
+                      Number(p.status) === 1
+                  ).length
+                }
+              </h3>
+
+              <small className="text-muted">
+                Active Partners
+              </small>
             </div>
-          </>
-        )}
-      </td>
-    </tr>
+          </div>
+        </div>
+
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3 className="text-danger">
+                {
+                  partners.filter(
+                    (p) =>
+                      Number(p.status) !== 1
+                  ).length
+                }
+              </h3>
+
+              <small className="text-muted">
+                Inactive Partners
+              </small>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
   )
 }
- 

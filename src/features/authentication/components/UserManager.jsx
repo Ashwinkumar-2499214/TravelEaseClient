@@ -65,7 +65,7 @@ export default function UserManager() {
   }
 
   const handleDelete = async (userId) => {
-    if (!window.confirm('Delete this user?')) return
+    if (!window.confirm('Are you sure you want to delete this user?')) return
     try { await authService.deleteUser(userId); load(search) }
     catch (err) { alert(err?.response?.data?.message || err.message) }
   }
@@ -75,123 +75,201 @@ export default function UserManager() {
     load(search)
   }
 
-  if (error) return <div className="alert alert-danger">{error}</div>
+  if (error) return <div className="container-fluid py-4"><div className="alert alert-danger">{error}</div></div>
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
+    <div className="container-fluid py-4">
+      {/* Header Section */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-          <h5 className="text-white font-monospace text-uppercase mb-1">User Management</h5>
-          <small className="text-light font-monospace">System Access Control</small>
+          <h2 className="fw-bold mb-2 te-text-purple" style={{ color: '#6f42c1' }}>
+            <i className="bi bi-people-fill me-2" aria-hidden="true"></i>
+            User Management
+          </h2>
+          <p className="text-muted mb-0">System Access Control and Directory Registry</p>
         </div>
-        <div className="d-flex align-items-center gap-3">
-          <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+
+        <div className="d-flex align-items-center gap-2 flex-wrap">
           <form onSubmit={handleSearch} className="d-flex gap-2">
-            <input className="form-control form-control-sm bg-dark text-light border-secondary rounded-0" placeholder="Search users..." value={search}
-              onChange={e => setSearch(e.target.value)} style={{ width: 200 }} />
-            <button type="submit" className="btn btn-outline-info btn-sm rounded-0 font-monospace">Search</button>
+            <input 
+              className="form-control form-control-sm border-secondary shadow-sm" 
+              placeholder="Search users..." 
+              value={search}
+              onChange={e => setSearch(e.target.value)} 
+              style={{ width: 220 }} 
+            />
+            <button 
+              type="submit" 
+              className="btn btn-outline-secondary btn-sm"
+            >
+              Search
+            </button>
           </form>
-          <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
-            <i className="fa-solid fa-plus me-2" />Register User
+          <button 
+            className="btn btn-primary btn-sm text-white" 
+            style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}
+            onClick={openCreate}
+          >
+            <i className="bi bi-person-plus-fill me-2" aria-hidden="true" />
+            Register User
           </button>
         </div>
       </div>
 
+      {/* Main Table Content / Loading */}
       {loading ? (
-        <div className="text-center py-4"><div className="spinner-border" /></div>
+        <div className="text-center py-5">
+          <div className="spinner-border" style={{ color: '#6f42c1' }}>
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-dark table-hover align-middle rounded-0 border-secondary">
-            <thead className="bg-info text-dark">
-              <tr>
-                <th className="font-monospace text-uppercase small border-secondary">Name</th>
-                <th className="font-monospace text-uppercase small border-secondary">Email</th>
-                <th className="font-monospace text-uppercase small border-secondary">Phone</th>
-                <th className="font-monospace text-uppercase small border-secondary">Role</th>
-                <th className="font-monospace text-uppercase small border-secondary">Active</th>
-                <th className="font-monospace text-uppercase small border-secondary">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(u => (
-                <tr key={u.userId} className="border-secondary bg-dark">
-                  <td className="text-light font-monospace border-secondary bg-darker">{u.name}</td>
-                  <td className="text-light font-monospace border-secondary bg-darker">{u.email}</td>
-                  <td className="text-light font-monospace border-secondary bg-darker">{u.phone}</td>
-                  <td className="border-secondary bg-darker"><span className="badge bg-secondary font-monospace">{u.role}</span></td>
-                  <td className="border-secondary bg-darker">{u.isActive ? <span className="badge bg-success font-monospace">Active</span> : <span className="badge bg-danger font-monospace">Inactive</span>}</td>
-                  <td className="border-secondary bg-darker">
-                    <div className="btn-group btn-group-sm">
-                      <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(u)}><i className="fa-solid fa-pen" /></button>
-                      <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(u.userId)}><i className="fa-solid fa-trash" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && (
+        <div className="card border-0 shadow-sm">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
                 <tr>
-                  <td colSpan={6} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
-                    <i className="fa-solid fa-users me-2"></i>
-                    <span className="font-monospace">No users found in system registry.</span>
-                  </td>
+                  <th className="small fw-bold text-secondary text-uppercase ps-4">Name</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Email</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Phone</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Role</th>
+                  <th className="small fw-bold text-secondary text-uppercase">Status</th>
+                  <th className="small fw-bold text-secondary text-uppercase text-end pe-4">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.userId}>
+                    <td className="ps-4 fw-semibold text-dark">{u.name}</td>
+                    <td className="text-muted">{u.email}</td>
+                    <td className="text-muted">{u.phone}</td>
+                    <td>
+                      <span className="badge text-white" style={{ backgroundColor: '#6f42c1' }}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td>
+                      {u.isActive ? (
+                        <span className="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Active</span>
+                      ) : (
+                        <span className="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3">Inactive</span>
+                      )}
+                    </td>
+                    <td className="text-end pe-4">
+                      <div className="d-flex gap-2 justify-content-end">
+                        <button 
+                          className="btn btn-sm btn-outline-success" 
+                          onClick={() => openEdit(u)}
+                          title="Edit User"
+                        >
+                          <i className="bi bi-pencil" />
+                        </button>
+                        <button 
+                          className="btn btn-sm btn-outline-danger" 
+                          onClick={() => handleDelete(u.userId)}
+                          title="Delete User"
+                        >
+                          <i className="bi bi-trash" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {users.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-5 text-muted bg-light bg-opacity-50">
+                      <i className="bi bi-people me-2 fs-4 d-block mb-2 text-secondary"></i>
+                      <span>No users found matching the filter criteria.</span>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {showModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
-          <div className="modal-dialog">
-            <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleSubmit}>
-              <div className="modal-header bg-dark border-secondary">
-                <div>
-                  <h5 className="text-white font-monospace text-uppercase mb-1">{editUser ? 'Edit User' : 'Register User'}</h5>
-                  <small className="text-light font-monospace">System Access Control</small>
-                </div>
-                <div className="d-flex align-items-center gap-2">
-                  <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
-                  <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)} />
-                </div>
-              </div>
-              <div className="modal-body bg-dark">
-                <div className="d-flex flex-column gap-3">
-                  <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Name</label>
-                    <input className="form-control bg-dark text-white border-secondary rounded-0" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
-                  </div>
-                  <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Email</label>
-                    <input type="email" className="form-control bg-dark text-white border-secondary rounded-0" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} required />
-                  </div>
-                  <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">Phone</label>
-                    <input className="form-control bg-dark text-white border-secondary rounded-0" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} required />
-                  </div>
-                  {!editUser && (
-                    <div>
-                      <label className="form-label text-white font-monospace text-uppercase small">Password</label>
-                      <input type="password" className="form-control bg-dark text-white border-secondary rounded-0" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} required />
-                    </div>
-                  )}
-                  <div>
-                    <label className="form-label text-white font-monospace text-uppercase small">System Role</label>
-                    <select className="form-select bg-dark text-white border-secondary rounded-0" value={String(form.role)} onChange={e => setForm(p => ({ ...p, role: Number(e.target.value) }))}>
-                      {ROLES.map(r => <option key={r.value} value={String(r.value)} className="bg-dark text-white">{r.label}</option>)}
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer bg-dark border-secondary">
-                <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-outline-info rounded-0 font-monospace text-uppercase">
-                  <i className="fa-solid fa-user-plus me-2"></i>{editUser ? 'Save Changes' : 'Register'}
-                </button>
-              </div>
-            </form>
+      {/* Statistics Blocks */}
+      <div className="row mt-5">
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3 style={{ color: '#6f42c1' }}>{users.length}</h3>
+              <small className="text-muted">Total Registered Users</small>
+            </div>
           </div>
         </div>
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3 className="text-success">{users.filter(u => u.isActive).length}</h3>
+              <small className="text-muted">Active Profiles</small>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4 mb-3">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body text-center">
+              <h3 className="text-danger">{users.filter(u => !u.isActive).length}</h3>
+              <small className="text-muted">Suspended/Inactive Profiles</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal Dialog Form */}
+      {showModal && (
+        <>
+          <div className="modal show d-block" tabIndex="-1" role="dialog" style={{ background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)' }}>
+            <div className="modal-dialog modal-dialog-centered" role="document">
+              <form className="modal-content border-0 shadow-lg" onSubmit={handleSubmit}>
+                <div className="modal-header text-white" style={{ backgroundColor: '#6f42c1' }}>
+                  <div>
+                    <h5 className="modal-title fw-bold">
+                      <i className={`bi ${editUser ? 'bi-pencil-square' : 'bi-person-plus-fill'} me-2`}></i>
+                      {editUser ? 'Edit User Profile' : 'Register New User'}
+                    </h5>
+                  </div>
+                  <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={() => setShowModal(false)} />
+                </div>
+                <div className="modal-body p-4">
+                  <div className="d-flex flex-column gap-3">
+                    <div>
+                      <label className="form-label text-muted small fw-bold text-uppercase">Full Name</label>
+                      <input className="form-control" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
+                    </div>
+                    <div>
+                      <label className="form-label text-muted small fw-bold text-uppercase">Email Address</label>
+                      <input type="email" className="form-control" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} required />
+                    </div>
+                    <div>
+                      <label className="form-label text-muted small fw-bold text-uppercase">Phone Number</label>
+                      <input className="form-control" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} required />
+                    </div>
+                    {!editUser && (
+                      <div>
+                        <label className="form-label text-muted small fw-bold text-uppercase">Secure Password</label>
+                        <input type="password" className="form-control" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} required />
+                      </div>
+                    )}
+                    <div>
+                      <label className="form-label text-muted small fw-bold text-uppercase">Assigned System Role</label>
+                      <select className="form-select" value={String(form.role)} onChange={e => setForm(p => ({ ...p, role: Number(e.target.value) }))}>
+                        {ROLES.map(r => <option key={r.value} value={String(r.value)}>{r.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer bg-light">
+                  <button type="button" className="btn btn-outline-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary text-white" style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}>
+                    <i className="bi bi-save me-2"></i>{editUser ? 'Save Changes' : 'Complete Registration'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

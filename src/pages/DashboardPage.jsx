@@ -1,7 +1,5 @@
-
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '../features/authentication/AuthProvider'
-import Sidebar from '../components/Sidebar'
 import ProtectedRoute from '../components/ProtectedRoute'
 import TravelerDashboard from './roles/TravelerDashboard'
 import AgentDashboard from './roles/AgentDashboard'
@@ -24,10 +22,10 @@ export default function DashboardPage() {
 
   if (!authReady)
     return (
-      <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '60vh' }}>
+      <div className="d-flex align-items-center justify-content-center w-100" style={{ minHeight: '60vh' }}>
         <div
           className="spinner-border"
-          style={{ color: '#7e22ce' }}
+          style={{ color: 'var(--te-purple-700)' }}
           role="status"
         >
           <span className="visually-hidden">Loading...</span>
@@ -41,18 +39,14 @@ export default function DashboardPage() {
   const RoleDashboard = ROLE_DASHBOARD[role] || TravelerDashboard
 
   return (
-    <div className="d-flex te-bg-gray" style={{ paddingTop: 86, minHeight: 'calc(100vh - 86px)' }}>
-      <Sidebar />
-
-      <main className="flex-grow-1 overflow-auto te-bg-gray">
-        <div className="container-fluid px-3 px-lg-4 py-4" style={{ maxWidth: '1400px' }}>
-          <ProtectedRoute>
-            <Routes>
-              <Route path="/*" element={<RoleDashboard />} />
-            </Routes>
-          </ProtectedRoute>
-        </div>
-      </main>
+    <div className="w-100">
+      <div className="container-fluid px-3 px-lg-4 py-4" style={{ maxWidth: '1400px' }}>
+        <ProtectedRoute>
+          <Routes>
+            <Route path="/*" element={<RoleDashboard />} />
+          </Routes>
+        </ProtectedRoute>
+      </div>
     </div>
   )
 }

@@ -139,15 +139,12 @@ export default function NotificationsPage() {
       {/* Header */}
 
       <div className="mb-4">
-        <h2
-          className="fw-bold"
-          style={{ color: '#6f42c1' }}
-        >
-          <i className="fas fa-bell me-2"></i>
+        <h2 className="fw-bold mb-2 te-text-purple">
+          <i className="bi bi-bell-fill me-2" aria-hidden="true"></i>
           Notifications
         </h2>
 
-        <p className="text-muted">
+        <p className="text-muted mb-0">
           {isAdmin
             ? 'Manage all system notifications'
             : 'Your personal notifications and updates'}
@@ -248,13 +245,11 @@ export default function NotificationsPage() {
         </div>
 
         <button
-          className="btn text-white"
-          style={{
-            backgroundColor: '#6f42c1'
-          }}
+          className="btn btn-primary text-white"
+          style={{ backgroundColor: 'var(--te-purple-700)', borderColor: 'var(--te-purple-700)' }}
           onClick={handleMarkAllAsRead}
         >
-          <i className="fas fa-check-double me-2"></i>
+          <i className="bi bi-check2-all me-2" aria-hidden="true"></i>
           Mark All Read
         </button>
 

@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '../features/authentication/AuthProvider'
 import Sidebar from '../components/Sidebar'
@@ -22,14 +22,18 @@ const ROLE_DASHBOARD = {
 export default function DashboardPage() {
   const { currentUser, authReady } = useAuth()
 
-  if (!authReady) return (
-    <div className="d-flex justify-content-center align-items-center bg-dark" style={{ minHeight: '60vh' }}>
-      <div className="d-flex flex-column align-items-center">
-        <div className="spinner-border text-info mb-3" />
-        <span className="text-light font-monospace">Loading System...</span>
+  if (!authReady)
+    return (
+      <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '60vh' }}>
+        <div
+          className="spinner-border"
+          style={{ color: '#7e22ce' }}
+          role="status"
+        >
+          <span className="visually-hidden">Loading...</span>
+        </div>
       </div>
-    </div>
-  )
+    )
 
   if (!currentUser) return <Navigate to="/login" replace />
 
@@ -37,15 +41,18 @@ export default function DashboardPage() {
   const RoleDashboard = ROLE_DASHBOARD[role] || TravelerDashboard
 
   return (
-    <div className="d-flex" style={{ minHeight: 'calc(100vh - 112px)' }}>
+    <div className="d-flex te-bg-gray" style={{ paddingTop: 86, minHeight: 'calc(100vh - 86px)' }}>
       <Sidebar />
-      <div className="flex-grow-1 p-3 bg-dark">
-        <ProtectedRoute>
-          <Routes>
-            <Route path="/*" element={<RoleDashboard />} />
-          </Routes>
-        </ProtectedRoute>
-      </div>
+
+      <main className="flex-grow-1 overflow-auto te-bg-gray">
+        <div className="container-fluid px-3 px-lg-4 py-4" style={{ maxWidth: '1400px' }}>
+          <ProtectedRoute>
+            <Routes>
+              <Route path="/*" element={<RoleDashboard />} />
+            </Routes>
+          </ProtectedRoute>
+        </div>
+      </main>
     </div>
   )
 }

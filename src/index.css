@@ -1,68 +1,355 @@
+/* ========================================
+   Root Variables & Global Styles
+   ======================================== */
+
+:root {
+  /* TravelEase Brand Colors */
+  --te-purple-700: #7e22ce;
+  --te-purple-600: #9333ea;
+  --te-purple-50: #faf5ff;
+  --te-gray-50: #f9fafb;
+  --te-gray-100: #f3f4f6;
+
+  /* Font Families */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
-  background-color: #212529;
-  color: #f8f9fa;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-.nav-link.active {
-  font-weight: 600;
-  color: #0dcaf0 !important;
+body {
+  font-family: "Inter", "Segoe UI", "Roboto", sans-serif;
+  background: linear-gradient(180deg, var(--te-gray-50) 0%, var(--te-gray-100) 100%);
+  color: #111827;
 }
 
-.modal.show.d-block {
-  z-index: 1055;
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-.table th, .table td {
-  vertical-align: middle;
-  color: #f8f9fa;
+a {
+  color: var(--te-purple-700);
+  text-decoration: none;
 }
 
-.card {
-  border: 1px solid #6c757d;
-  background-color: rgba(108, 117, 125, 0.1);
-  color: #f8f9fa;
+a:hover {
+  color: var(--te-purple-600);
 }
 
-/* Industrial theme overrides */
-.form-control:focus {
-  border-color: #0dcaf0;
-  box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+/* ========================================
+   Bootstrap Overrides for White-Purple Theme
+   ======================================== */
+
+/* Primary color override */
+.btn-primary,
+.btn-primary:focus {
+  background-color: var(--te-purple-700) !important;
+  border-color: var(--te-purple-700) !important;
 }
 
-.btn-outline-info:hover {
-  background-color: #0dcaf0;
-  border-color: #0dcaf0;
-  color: #000;
+.btn-primary:hover {
+  background-color: var(--te-purple-600) !important;
+  border-color: var(--te-purple-600) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
 }
 
-/* Enhanced text readability */
-.text-body-secondary {
-  color: #adb5bd !important;
+.btn-outline-primary {
+  color: var(--te-purple-700) !important;
+  border-color: var(--te-purple-700) !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--te-purple-700) !important;
+  border-color: var(--te-purple-700) !important;
+}
+
+.text-primary {
+  color: var(--te-purple-700) !important;
+}
+
+.link-primary {
+  color: var(--te-purple-700) !important;
+}
+
+.link-primary:hover {
+  color: var(--te-purple-600) !important;
+}
+
+.bg-primary {
+  background-color: var(--te-purple-700) !important;
+}
+
+.border-primary {
+  border-color: var(--te-purple-700) !important;
+}
+
+/* Form styling */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--te-purple-700);
+  box-shadow: 0 0 0 0.2rem rgba(126, 34, 206, 0.25);
+}
+
+/* Badge styling */
+.badge-primary {
+  background-color: var(--te-purple-700) !important;
+}
+
+/* Alert styling */
+.alert-primary {
+  background-color: var(--te-purple-50);
+  border-color: #e9d5ff;
+  color: #581c87;
+}
+
+/* Navigation pills */
+.nav-pills .nav-link.active {
+  background-color: var(--te-purple-700) !important;
+}
+
+/* Navbar styling */
+.navbar-brand {
+  color: var(--te-purple-700) !important;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+/* ========================================
+   Custom Utility Classes
+   ======================================== */
+
+/* Min height for flex layout */
+.min-vh-100 {
+  min-height: 100vh;
+}
+
+/* Flex-grow for content area */
+.flex-grow-1 {
+  flex-grow: 1;
+}
+
+/* Transition utilities */
+.transition-all {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Custom spacing for responsive adjustments */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.5rem 0 !important;
+  }
+
+  .container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .card {
+    border-radius: 0.75rem;
+  }
+
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.1rem; }
+  h4 { font-size: 1rem; }
+  h5 { font-size: 0.95rem; }
+}
+
+/* ========================================
+   Production-Ready Adjustments
+   ======================================== */
+
+/* Ensure all components have proper contrast */
+.text-dark {
+  color: #111827 !important;
 }
 
 .text-muted {
-  color: #adb5bd !important;
+  color: #6b7280 !important;
 }
 
-/* Form controls */
-.form-control::placeholder {
-  color: #6c757d;
+.bg-light {
+  background-color: #ffffff !important;
 }
 
-.form-select option {
-  background-color: #343a40 !important;
-  color: #f8f9fa !important;
+/* Table styling for professional look */
+.table {
+  border-collapse: collapse;
 }
 
-/* Darker table data styling */
-.bg-darker {
-  background-color: #1a1e23 !important;
+.table thead th {
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.table-dark .text-secondary {
-  color: #868e96 !important;
+/* Ensure accessibility for links */
+a:active,
+a:focus {
+  outline: 2px solid var(--te-purple-700);
+  outline-offset: 2px;
 }
 
-.table tbody tr:hover .bg-darker {
-  background-color: #2c3034 !important;
+/* Prevent layout shift from scrollbar */
+html {
+  overflow-y: scroll;
 }
+
+/* ========================================
+   Print Styles
+   ======================================== */
+
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .navbar,
+  .sidebar,
+  .footer {
+    display: none;
+  }
+}
+
+
+.te-btn {
+  appearance: none;
+  border: 1px solid var(--te-border);
+  background: #fff;
+  color: var(--te-purple-700);
+  padding: 10px 14px;
+  border-radius: var(--te-radius-12);
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: var(--te-transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.te-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--te-shadow-sm);
+  border-color: rgba(124, 58, 237, 0.35);
+}
+
+.te-btn:active {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.14);
+}
+
+.te-btn:focus-visible {
+  outline: 3px solid rgba(124, 58, 237, 0.35);
+  outline-offset: 2px;
+}
+
+.te-btnPrimary {
+  border-color: rgba(124, 58, 237, 0.25);
+  background: linear-gradient(135deg, var(--te-purple-600) 0%, var(--te-purple-700) 100%);
+  color: #fff;
+}
+
+.te-btnPrimary:hover {
+  box-shadow: var(--te-shadow);
+}
+
+.te-btnGhost {
+  background: transparent;
+}
+
+.te-input {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: var(--te-radius-12);
+  border: 1px solid rgba(124, 58, 237, 0.16);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--te-text);
+  transition: var(--te-transition);
+}
+
+.te-input::placeholder {
+  color: rgba(30, 27, 75, 0.45);
+}
+
+.te-input:focus {
+  outline: none;
+  border-color: rgba(124, 58, 237, 0.55);
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+  transform: translateY(-1px);
+}
+
+.te-card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(124, 58, 237, 0.14);
+  border-radius: var(--te-radius-16);
+  box-shadow: 0 1px 0 rgba(124, 58, 237, 0.04);
+  transition: var(--te-transition);
+}
+
+.te-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--te-shadow-sm);
+}
+
+.te-sectionTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 950;
+  letter-spacing: -0.2px;
+}
+
+.te-muted {
+  color: var(--te-muted);
+}
+
+/* Small utility to remove any legacy Bootstrap-ish defaults */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+@keyframes tePulse {
+  0%, 100% {
+    transform: scale(0.95);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes teSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+

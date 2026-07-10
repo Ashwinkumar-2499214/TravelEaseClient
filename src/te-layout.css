@@ -1,0 +1,14 @@
+:root {}
+
+/* App shell helpers (no Login/Register changes) */
+.te-bg-gray{background-color:var(--te-gray-50)!important;}
+.te-text-purple{color:var(--te-purple-700)!important;}
+.te-shadow-sm{box-shadow:var(--te-shadow-sm)!important;}
+.te-border-right{border-right:1px solid var(--te-gray-200)!important;}
+
+.te-sidebar{width:260px;max-width:260px;height:calc(100vh - 86px);overflow-y:auto;position:sticky;top:86px;}
+
+@media (max-width: 768px){
+  .te-sidebar{position:fixed;left:-250px;top:0;height:100vh;transition:left .3s ease;z-index:1000;width:250px;max-width:250px;}
+}
+

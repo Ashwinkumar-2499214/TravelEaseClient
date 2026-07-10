@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import bookingsService from '../services/bookingsService'
 import inventoryService from '../../partners-inventory/services/inventoryService'
 import billingService from '../../billing-payments/services/billingService'
@@ -13,6 +13,7 @@ const calculateNights = (checkInDate, checkOutDate) => {
 }
 
 const STATUS_MAP = { 1: 'Pending', 2: 'Confirmed', 3: 'Cancelled', 4: 'Completed' }
+const STATUS_COLORS = { 1: 'warning', 2: 'success', 3: 'danger', 4: 'info' }
 const ROOM_TYPES = ['SINGLE', 'DOUBLE', 'SUITE']
 const STATUSES = [1, 2, 3, 4]
 const EMPTY_FORM = {
@@ -25,10 +26,10 @@ const EMPTY_FORM = {
   specialRequests: '',
 }
 
-export default function BookingsManager({ agentMode = false }) {
+export default function BookingsManager({ agentMode = false, approvalMode = false, pendingOnly = false }) {
   const { currentUser } = useAuth()
   const isAdmin = currentUser?.role === 'Admin'
-  const isAdminOrFinance = ['Admin', 'FinanceOfficer'].includes(currentUser?.role)
+  const isTravelAgent = currentUser?.role === 'TravelAgent'
 
   const [bookings, setBookings] = useState([])
   const [inventory, setInventory] = useState([])
@@ -50,8 +51,15 @@ export default function BookingsManager({ agentMode = false }) {
   const load = () => {
     setLoading(true)
     setError(null)
-    bookingsService.list(isAdminOrFinance ? {} : { userId: currentUser?.id })
-      .then(data => setBookings(data ? (Array.isArray(data) ? data : [data]) : []))
+    return bookingsService.list()
+      .then(data => {
+        const list = data ? (Array.isArray(data) ? data : [data]) : []
+        if (pendingOnly) {
+          setBookings(list.filter((b) => Number(b.status) === 1 || b.status === 'Pending'))
+        } else {
+          setBookings(list)
+        }
+      })
       .catch(e => setError(e.response?.data?.message || e.message))
       .finally(() => setLoading(false))
   }
@@ -64,6 +72,7 @@ export default function BookingsManager({ agentMode = false }) {
   }, [currentUser])
 
   const openCreate = () => {
+    if (isTravelAgent) return
     setEditBooking(null)
     setForm(EMPTY_FORM)
     setShowModal(true)
@@ -203,288 +212,336 @@ export default function BookingsManager({ agentMode = false }) {
     }
   }
 
-  const statusBadge = (s) => {
-    const label = STATUS_MAP[Number(s)] || s
-    const map = { Confirmed: 'bg-success', Pending: 'bg-warning text-dark', Cancelled: 'bg-danger', Completed: 'bg-info' }
-    return <span className={`badge ${map[label] || 'bg-secondary'}`}>{label}</span>
-  }
+  if (loading) return (
+    <div className="d-flex justify-content-center py-5">
+      <div className="spinner-border text-primary" role="status">
+        <span className="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  )
 
-  if (loading) return <div className="text-center py-4"><div className="spinner-border" /></div>
-  if (error) return <div className="alert alert-danger">{error}</div>
+  if (error) return <div className="alert alert-danger mb-4">{error}</div>
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
-        <div>
-          <h5 className="text-white font-monospace text-uppercase mb-1">{agentMode ? 'Bookings (Agent View)' : 'My Bookings'}</h5>
-          <small className="text-light font-monospace">Hotel Booking Management</small>
-        </div>
-        <div className="d-flex align-items-center gap-3">
-          <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
-          <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
-            <i className="fa-solid fa-plus me-2" />New Booking
-          </button>
+      {/* Header */}
+      <div className="card card-purple-accent mb-4 border-left" style={{ borderLeft: '4px solid #7e22ce' }}>
+        <div className="card-body">
+          <div className="row align-items-center">
+            <div className="col-auto">
+              <div
+                className="rounded-circle d-flex align-items-center justify-content-center text-white"
+                style={{ width: '50px', height: '50px', backgroundColor: '#7e22ce' }}
+              >
+                <i className="bi bi-briefcase-fill" style={{ fontSize: '1.5rem' }}></i>
+              </div>
+            </div>
+            <div className="col">
+              <h5 className="mb-1" style={{ color: '#7e22ce', fontWeight: 700 }}>
+                {agentMode ? 'Bookings (Agent View)' : 'My Bookings'}
+              </h5>
+              <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>
+                Hotel booking management system
+              </p>
+            </div>
+            {!isTravelAgent && (
+              <div className="col-auto">
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={openCreate}
+                  style={{ backgroundColor: '#7e22ce', borderColor: '#7e22ce' }}
+                >
+                  <i className="bi bi-plus-circle me-2"></i>New Booking
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
+      {/* Table */}
       <div className="table-responsive">
-        <table className="table table-dark table-hover align-middle rounded-0 border-secondary">
-          <thead className="bg-info text-dark">
-            <tr>
-              <th className="font-monospace text-uppercase small border-secondary">Hotel</th>
-              <th className="font-monospace text-uppercase small border-secondary">Room Type</th>
-              <th className="font-monospace text-uppercase small border-secondary">Check-In</th>
-              <th className="font-monospace text-uppercase small border-secondary">Check-Out</th>
-              <th className="font-monospace text-uppercase small border-secondary">Nights</th>
-              <th className="font-monospace text-uppercase small border-secondary">Guests</th>
-              <th className="font-monospace text-uppercase small border-secondary">Rooms</th>
-              <th className="font-monospace text-uppercase small border-secondary">Amount</th>
-              <th className="font-monospace text-uppercase small border-secondary">Status</th>
-              <th className="font-monospace text-uppercase small border-secondary">Actions</th>
+        <table className="table table-hover align-middle mb-0">
+          <thead className="table-light">
+            <tr style={{ backgroundColor: '#7e22ce' }}>
+              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Hotel</th>
+              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Room Type</th>
+              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Check-In</th>
+              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Check-Out</th>
+              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Guests</th>
+              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Amount</th>
+              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Status</th>
+              <th style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', borderColor: '#7e22ce' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {bookings.map((booking) => {
-              const bid = booking.bookingId ?? booking.id
-              return (
-                <React.Fragment key={bid}>
-                  <tr className="border-secondary bg-dark">
-                    <td className="text-secondary font-monospace border-secondary bg-darker">{booking.itemType || booking.hotelName || '-'}</td>
-                    <td className="text-secondary font-monospace border-secondary bg-darker">{booking.roomType || '-'}</td>
-                    <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(booking.checkInDate)}</td>
-                    <td className="text-secondary font-monospace border-secondary bg-darker">{formatDate(booking.checkOutDate)}</td>
-                    <td className="text-secondary font-monospace border-secondary bg-darker">{booking.numberOfNights ?? ''}</td>
-                    <td className="text-secondary font-monospace border-secondary bg-darker">{booking.numberOfGuests ?? '-'}</td>
-                    <td className="text-secondary font-monospace border-secondary bg-darker">{booking.numberOfRooms ?? '-'}</td>
-                    <td className="text-secondary font-monospace border-secondary bg-darker">${Number(booking.amount || 0).toFixed(2)}</td>
-                    <td className="border-secondary bg-darker">
-                      <div className="d-flex align-items-center gap-2">
-                        {statusBadge(booking.status)}
-                        {isAdmin && (
-                          <select
-                            className="form-select form-select-sm bg-dark text-white border-secondary rounded-0"
-                            style={{ width: 120 }}
-                            value={booking.status}
-                            onChange={(e) => handleStatusChange(bid, e.target.value)}
+            {bookings.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="text-center py-5 text-muted">
+                  <i className="bi bi-inbox" style={{ fontSize: '2rem' }}></i>
+                  <p className="mt-2">No bookings found</p>
+                </td>
+              </tr>
+            ) : (
+              bookings.map((booking) => {
+                const bid = booking.bookingId ?? booking.id
+                const statusColor = STATUS_COLORS[Number(booking.status)]
+                return (
+                  <React.Fragment key={bid}>
+                    <tr style={{ backgroundColor: expandedId === bid ? '#f9fafb' : 'transparent' }}>
+                      <td>{booking.itemType || booking.hotelName || '-'}</td>
+                      <td>{booking.roomType || '-'}</td>
+                      <td>{formatDate(booking.checkInDate)}</td>
+                      <td>{formatDate(booking.checkOutDate)}</td>
+                      <td>{booking.numberOfGuests || '-'}</td>
+                      <td className="fw-600">${Number(booking.amount || 0).toFixed(2)}</td>
+                      <td>
+                        <span className={`badge bg-${statusColor}`}>
+                          {STATUS_MAP[Number(booking.status)] || booking.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="btn-group btn-group-sm" role="group">
+                          <button
+                            className="btn btn-outline-secondary"
+                            onClick={() => setExpandedId(expandedId === bid ? null : bid)}
+                            title="Expand details"
                           >
-                            {STATUSES.map((s) => (
-                              <option key={s} value={s} className="bg-dark text-white">
-                                {STATUS_MAP[s]}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-                    </td>
-                    <td className="border-secondary bg-darker">
-                      <div className="btn-group btn-group-sm">
-                        <button className="btn btn-outline-secondary rounded-0" onClick={() => setExpandedId(expandedId === bid ? null : bid)}>
-                          <i className={`fa-solid ${expandedId === bid ? 'fa-chevron-up' : 'fa-chevron-down'}`} />
-                        </button>
-                        <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(booking)}><i className="fa-solid fa-pen" /></button>
-                        <button className="btn btn-outline-success rounded-0" onClick={() => openPay(booking)}><i className="fa-solid fa-credit-card" /></button>
-                        <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(bid)}><i className="fa-solid fa-trash" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                  {expandedId === bid && (
-                    <tr className="bg-secondary bg-opacity-25 border-secondary">
-                      <td colSpan={10} className="ps-4 border-secondary">
-                        <div className="d-flex flex-column gap-2 text-white font-monospace">
-                          <div><strong>Booked By:</strong> {booking.userName || currentUser?.name || '-'}</div>
-                          <div><strong>Booking Date:</strong> {formatDate(booking.bookingDate)}</div>
-                          <div><strong>Special Requests:</strong> {booking.specialRequests || '-'}</div>
+                            <i className={`bi ${expandedId === bid ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                          </button>
+                          <button
+                            className="btn btn-outline-primary"
+                            onClick={() => openEdit(booking)}
+                            disabled={isTravelAgent}
+                            title="Edit booking"
+                          >
+                            <i className="bi bi-pencil"></i>
+                          </button>
+                          <button
+                            className="btn btn-outline-success"
+                            onClick={() => openPay(booking)}
+                            disabled={isTravelAgent}
+                            title="Create payment"
+                          >
+                            <i className="bi bi-credit-card"></i>
+                          </button>
+                          <button
+                            className="btn btn-outline-danger"
+                            onClick={() => handleDelete(bid)}
+                            disabled={isTravelAgent}
+                            title="Delete booking"
+                          >
+                            <i className="bi bi-trash"></i>
+                          </button>
                         </div>
                       </td>
                     </tr>
-                  )}
-                </React.Fragment>
-              )
-            })}
-            {bookings.length === 0 && (
-              <tr>
-                <td colSpan={10} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
-                  <i className="fa-solid fa-database me-2"></i>
-                  <span className="font-monospace">No bookings found in system registry.</span>
-                </td>
-              </tr>
+                    {expandedId === bid && (
+                      <tr style={{ backgroundColor: '#f0f4f8' }}>
+                        <td colSpan="8">
+                          <div className="p-3">
+                            <div className="row g-3">
+                              <div className="col-md-6">
+                                <small className="text-muted fw-600">Booked By</small>
+                                <p className="mb-0">{booking.userName || currentUser?.name || '-'}</p>
+                              </div>
+                              <div className="col-md-6">
+                                <small className="text-muted fw-600">Booking Date</small>
+                                <p className="mb-0">{formatDate(booking.bookingDate)}</p>
+                              </div>
+                              <div className="col-12">
+                                <small className="text-muted fw-600">Special Requests</small>
+                                <p className="mb-0">{booking.specialRequests || '-'}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                )
+              })
             )}
           </tbody>
         </table>
       </div>
 
+      {/* Modal: New/Edit Booking */}
       {showModal && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,.5)' }}>
           <div className="modal-dialog">
-            <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleSubmit}>
-              <div className="modal-header bg-dark border-secondary">
-                <div>
-                  <h5 className="text-white font-monospace text-uppercase mb-1">{editBooking ? 'Edit Booking' : 'New Booking'}</h5>
-                  <small className="text-light font-monospace">Hotel Booking Management</small>
+            <div className="modal-content">
+              <form onSubmit={handleSubmit}>
+                <div className="modal-header" style={{ backgroundColor: '#7e22ce', borderColor: '#7e22ce' }}>
+                  <h5 className="modal-title text-white" style={{ fontWeight: 700 }}>
+                    {editBooking ? 'Edit Booking' : 'New Booking'}
+                  </h5>
+                  <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)}></button>
                 </div>
-                <div className="d-flex align-items-center gap-2">
-                  <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
-                  <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)} />
-                </div>
-              </div>
-              <div className="modal-body bg-dark">
-                <div className="row gy-3">
-                  <div className="col-12">
-                    <label className="form-label text-white font-monospace text-uppercase small">Select Hotel Room</label>
-                    <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.inventoryId} onChange={(e) => setForm((prev) => ({ ...prev, inventoryId: e.target.value }))} required>
-                      <option value="" className="bg-dark text-white">-- Select a hotel room --</option>
+                <div className="modal-body p-4">
+                  <div className="mb-3">
+                    <label className="form-label fw-600">Select Hotel Room</label>
+                    <select className="form-select" value={form.inventoryId} onChange={(e) => setForm(prev => ({...prev, inventoryId: e.target.value}))} required>
+                      <option value="">-- Select a hotel room --</option>
                       {inventory.map((item) => {
                         const id = item.inventoryId ?? item.id
                         return (
-                          <option key={id} value={id} className="bg-dark text-white">
+                          <option key={id} value={id}>
                             [{item.itemType || item.type}] {item.name || item.title || `Item #${id}`} — ${Number(item.price ?? item.amount ?? 0).toFixed(2)}
                           </option>
                         )
                       })}
                     </select>
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label text-white font-monospace text-uppercase small">Check-In</label>
-                    <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={form.checkInDate} onChange={(e) => setForm((prev) => ({ ...prev, checkInDate: e.target.value }))} required />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label text-white font-monospace text-uppercase small">Check-Out</label>
-                    <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={form.checkOutDate} onChange={(e) => setForm((prev) => ({ ...prev, checkOutDate: e.target.value }))} required />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label text-white font-monospace text-uppercase small">Guests</label>
-                    <input type="number" min={1} className="form-control bg-dark text-white border-secondary rounded-0" value={form.numberOfGuests} onChange={(e) => setForm((prev) => ({ ...prev, numberOfGuests: Number(e.target.value) }))} required />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label text-white font-monospace text-uppercase small">Rooms</label>
-                    <input type="number" min={1} className="form-control bg-dark text-white border-secondary rounded-0" value={form.numberOfRooms} onChange={(e) => setForm((prev) => ({ ...prev, numberOfRooms: Number(e.target.value) }))} required />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label text-white font-monospace text-uppercase small">Room Type</label>
-                    <select className="form-select bg-dark text-white border-secondary rounded-0" value={form.roomType} onChange={(e) => setForm((prev) => ({ ...prev, roomType: e.target.value }))} required>
-                      <option value="">-- Select --</option>
-                      {ROOM_TYPES.map(rt => <option key={rt} value={rt}>{rt}</option>)}
-                    </select>
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label text-white font-monospace text-uppercase small">Special Requests</label>
-                    <textarea className="form-control bg-dark text-white border-secondary rounded-0" rows={3} value={form.specialRequests} onChange={(e) => setForm((prev) => ({ ...prev, specialRequests: e.target.value }))} />
-                  </div>
-                  <div className="col-12">
-                    <div className="alert alert-secondary rounded-0 mb-0 font-monospace small">
-                      Estimated amount: <strong>${bookingAmountEstimate.toFixed(2)}</strong>
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-6">
+                      <label className="form-label fw-600">Check-In</label>
+                      <input type="date" className="form-control" value={form.checkInDate} onChange={(e) => setForm(prev => ({...prev, checkInDate: e.target.value}))} required />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-600">Check-Out</label>
+                      <input type="date" className="form-control" value={form.checkOutDate} onChange={(e) => setForm(prev => ({...prev, checkOutDate: e.target.value}))} required />
                     </div>
                   </div>
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-4">
+                      <label className="form-label fw-600">Guests</label>
+                      <input type="number" min={1} className="form-control" value={form.numberOfGuests} onChange={(e) => setForm(prev => ({...prev, numberOfGuests: Number(e.target.value)}))} required />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label fw-600">Rooms</label>
+                      <input type="number" min={1} className="form-control" value={form.numberOfRooms} onChange={(e) => setForm(prev => ({...prev, numberOfRooms: Number(e.target.value)}))} required />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label fw-600">Room Type</label>
+                      <select className="form-select" value={form.roomType} onChange={(e) => setForm(prev => ({...prev, roomType: e.target.value}))} required>
+                        <option value="">-- Select --</option>
+                        {ROOM_TYPES.map(rt => <option key={rt} value={rt}>{rt}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-600">Special Requests</label>
+                    <textarea className="form-control" rows={3} value={form.specialRequests} onChange={(e) => setForm(prev => ({...prev, specialRequests: e.target.value}))} />
+                  </div>
+                  <div className="alert alert-info mb-0">
+                    <strong>Estimated Amount:</strong> ${bookingAmountEstimate.toFixed(2)}
+                  </div>
                 </div>
-              </div>
-              <div className="modal-footer bg-dark border-secondary">
-                <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-outline-info rounded-0 font-monospace text-uppercase">
-                  <i className="fa-solid fa-save me-2"></i>Save Booking
-                </button>
-              </div>
-            </form>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#7e22ce', borderColor: '#7e22ce' }}>
+                    <i className="bi bi-check-circle me-2"></i>Save Booking
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
 
+      {/* Modal: Payment */}
       {showPayModal && payBooking && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.85)' }}>
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,.5)' }}>
           <div className="modal-dialog modal-lg">
-            <div className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0">
-              <div className="modal-header bg-dark border-secondary">
+            <div className="modal-content">
+              <div className="modal-header" style={{ backgroundColor: '#7e22ce', borderColor: '#7e22ce' }}>
                 <div>
-                  <h5 className="text-white font-monospace text-uppercase mb-1">Create Invoice</h5>
-                  <small className="text-light font-monospace">Booking #{payBooking.bookingId ?? payBooking.id} — ${Number(payBooking.amount ?? 0).toFixed(2)}</small>
+                  <h5 className="modal-title text-white" style={{ fontWeight: 700, marginBottom: 0 }}>
+                    Create Invoice & Payment
+                  </h5>
+                  <small className="text-white-50">Booking #{payBooking.bookingId ?? payBooking.id} — ${Number(payBooking.amount ?? 0).toFixed(2)}</small>
                 </div>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setShowPayModal(false)} />
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowPayModal(false)}></button>
               </div>
-              <div className="modal-body bg-dark">
+              <div className="modal-body p-4">
                 {!payResult ? (
                   <form onSubmit={handleCreateInvoice}>
-                    <div className="row gy-3">
-                      <div className="col-md-6">
-                        <label className="form-label text-white font-monospace text-uppercase small">Amount</label>
-                        <input className="form-control bg-dark text-secondary border-secondary rounded-0" value={`$${Number(payBooking.amount ?? 0).toFixed(2)}`} disabled />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label text-white font-monospace text-uppercase small">Due Date</label>
-                        <input type="date" className="form-control bg-dark text-white border-secondary rounded-0" value={payForm.dueDate} onChange={(e) => setPayForm((prev) => ({ ...prev, dueDate: e.target.value }))} required />
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label text-white font-monospace text-uppercase small">Description</label>
-                        <textarea className="form-control bg-dark text-white border-secondary rounded-0" rows={3} value={payForm.description} onChange={(e) => setPayForm((prev) => ({ ...prev, description: e.target.value }))} />
-                      </div>
+                    <div className="mb-3">
+                      <label className="form-label fw-600">Amount</label>
+                      <div className="form-control-plaintext fw-600">${Number(payBooking.amount ?? 0).toFixed(2)}</div>
                     </div>
-                    <div className="modal-footer bg-dark border-secondary">
-                      <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => setShowPayModal(false)}>Cancel</button>
-                      <button type="submit" className="btn btn-outline-success rounded-0 font-monospace text-uppercase" disabled={paying}>
-                        {paying ? <span className="spinner-border spinner-border-sm me-2" /> : <i className="fa-solid fa-file-invoice-dollar me-2" />}Create Invoice
+                    <div className="mb-3">
+                      <label className="form-label fw-600">Due Date</label>
+                      <input type="date" className="form-control" value={payForm.dueDate} onChange={(e) => setPayForm(prev => ({...prev, dueDate: e.target.value}))} required />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label fw-600">Description</label>
+                      <textarea className="form-control" rows={3} value={payForm.description} onChange={(e) => setPayForm(prev => ({...prev, description: e.target.value}))} />
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" onClick={() => setShowPayModal(false)}>Cancel</button>
+                      <button type="submit" className="btn btn-success" disabled={paying}>
+                        {paying ? <span className="spinner-border spinner-border-sm me-2"></span> : <i className="bi bi-file-earmark-text me-2"></i>}
+                        Create Invoice
                       </button>
                     </div>
                   </form>
                 ) : !paymentResult ? (
-                  <>
-                    <div className="alert alert-success rounded-0 font-monospace mb-3">
-                      <i className="fa-solid fa-circle-check me-2" />Invoice #{payResult.invoiceId ?? payResult.id} created — complete payment to finalize.
+                  <form onSubmit={handleSubmitPayment}>
+                    <div className="alert alert-success mb-4">
+                      <i className="bi bi-check-circle me-2"></i>Invoice #{payResult.invoiceId ?? payResult.id} created successfully
                     </div>
-                    <form id="paymentForm" onSubmit={handleSubmitPayment}>
-                      <div className="row gy-3">
-                        <div className="col-md-4">
-                          <label className="form-label text-white font-monospace text-uppercase small">Amount</label>
-                          <input className="form-control bg-dark text-secondary border-secondary rounded-0" value={`$${Number(payBooking.amount ?? 0).toFixed(2)}`} disabled />
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label text-white font-monospace text-uppercase small">Payment Method</label>
-                          <select className="form-select bg-dark text-white border-secondary rounded-0" value={paymentForm.paymentMethod} onChange={(e) => setPaymentForm((prev) => ({ ...prev, paymentMethod: Number(e.target.value) }))}>
-                            <option value={1}>Credit Card</option>
-                            <option value={2}>Bank Transfer</option>
-                            <option value={3}>Cash</option>
-                            <option value={4}>Online</option>
-                          </select>
-                        </div>
-                        <div className="col-md-4">
-                          <label className="form-label text-white font-monospace text-uppercase small">Gateway Provider</label>
-                          <input className="form-control bg-dark text-white border-secondary rounded-0" value={paymentForm.gatewayProvider} onChange={(e) => setPaymentForm((prev) => ({ ...prev, gatewayProvider: e.target.value }))} />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label text-white font-monospace text-uppercase small">Transaction Reference</label>
-                          <input className="form-control bg-dark text-white border-secondary rounded-0" placeholder="e.g. EDZPA5387L" value={paymentForm.transactionReference} onChange={(e) => setPaymentForm((prev) => ({ ...prev, transactionReference: e.target.value }))} required />
-                        </div>
+                    <div className="row g-3 mb-3">
+                      <div className="col-md-6">
+                        <label className="form-label fw-600">Payment Method</label>
+                        <select className="form-select" value={paymentForm.paymentMethod} onChange={(e) => setPaymentForm(prev => ({...prev, paymentMethod: Number(e.target.value)}))}>
+                          <option value={1}>Credit Card</option>
+                          <option value={2}>Bank Transfer</option>
+                          <option value={3}>Cash</option>
+                          <option value={4}>Online</option>
+                        </select>
                       </div>
-                      <div className="modal-footer bg-dark border-secondary">
-                        <button type="button" className="btn btn-outline-secondary rounded-0 font-monospace text-uppercase" onClick={() => { setShowPayModal(false); setPayResult(null); setPaymentResult(null) }}>Cancel</button>
-                        <button type="submit" form="paymentForm" className="btn btn-outline-success rounded-0 font-monospace text-uppercase" disabled={submittingPayment}>
-                          {submittingPayment ? <span className="spinner-border spinner-border-sm me-2" /> : <i className="fa-solid fa-money-bill-wave me-2" />}Submit Payment
-                        </button>
+                      <div className="col-md-6">
+                        <label className="form-label fw-600">Gateway Provider</label>
+                        <input className="form-control" value={paymentForm.gatewayProvider} onChange={(e) => setPaymentForm(prev => ({...prev, gatewayProvider: e.target.value}))} />
                       </div>
-                    </form>
-                  </>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label fw-600">Transaction Reference</label>
+                      <input className="form-control" placeholder="e.g. TXN1234567890" value={paymentForm.transactionReference} onChange={(e) => setPaymentForm(prev => ({...prev, transactionReference: e.target.value}))} required />
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" onClick={() => { setShowPayModal(false); setPayResult(null) }}>Cancel</button>
+                      <button type="submit" className="btn btn-success" disabled={submittingPayment}>
+                        {submittingPayment ? <span className="spinner-border spinner-border-sm me-2"></span> : <i className="bi bi-credit-card me-2"></i>}
+                        Submit Payment
+                      </button>
+                    </div>
+                  </form>
                 ) : (
                   <div>
-                    <div className="alert alert-success rounded-0 font-monospace mb-3">
-                      <i className="fa-solid fa-circle-check me-2" />Payment processed successfully!
+                    <div className="alert alert-success mb-4">
+                      <i className="bi bi-check-circle me-2"></i>Payment processed successfully!
                     </div>
-                    <table className="table table-dark table-sm border-secondary rounded-0 mb-3">
-                      <tbody>
-                        {[
-                          ['Payment ID', paymentResult.paymentId ?? paymentResult.id],
-                          ['Invoice ID', paymentResult.invoiceId],
-                          ['Amount', `$${Number(paymentResult.amount).toFixed(2)}`],
-                          ['Method', paymentResult.method],
-                          ['Status', paymentResult.status],
-                          ['Transaction Ref', paymentResult.transactionReference],
-                          ['Gateway', paymentResult.gatewayProvider],
-                        ].map(([label, val]) => (
-                          <tr key={label} className="border-secondary">
-                            <td className="text-info font-monospace small border-secondary" style={{ width: 140 }}>{label}</td>
-                            <td className="text-white font-monospace small border-secondary">{val}</td>
+                    <div className="table-responsive mb-4">
+                      <table className="table table-sm mb-0">
+                        <tbody>
+                          <tr>
+                            <th className="fw-600">Payment ID</th>
+                            <td>{paymentResult.paymentId ?? paymentResult.id}</td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <div className="d-flex gap-2">
-                      <button className="btn btn-outline-secondary btn-sm rounded-0 font-monospace text-uppercase" onClick={() => { setShowPayModal(false); setPayResult(null); setPaymentResult(null) }}>Close</button>
+                          <tr>
+                            <th className="fw-600">Invoice ID</th>
+                            <td>{paymentResult.invoiceId}</td>
+                          </tr>
+                          <tr>
+                            <th className="fw-600">Amount</th>
+                            <td>${Number(paymentResult.amount).toFixed(2)}</td>
+                          </tr>
+                          <tr>
+                            <th className="fw-600">Method</th>
+                            <td>{paymentResult.method}</td>
+                          </tr>
+                          <tr>
+                            <th className="fw-600">Status</th>
+                            <td><span className="badge bg-success">{paymentResult.status}</span></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" onClick={() => { setShowPayModal(false); setPayResult(null); setPaymentResult(null) }}>Close</button>
                     </div>
                   </div>
                 )}

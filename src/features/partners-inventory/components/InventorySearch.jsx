@@ -79,8 +79,14 @@ export default function InventorySearch() {
   }, [search, items])
 
   const { currentUser } = useAuth()
+  const isTravelAgent = currentUser?.role === 'TravelAgent'
 
   const handleBook = async (e) => {
+    if (isTravelAgent) {
+      e.preventDefault()
+      return alert('Booking is not allowed for TravelAgent role.')
+    }
+
     e.preventDefault()
     const userId = currentUser?.id
     if (!userId || userId <= 0) {
@@ -170,14 +176,16 @@ export default function InventorySearch() {
                 </div>
                 <div className="card-footer">
                   <button 
-                    className="btn btn-primary btn-sm w-100" 
-                    disabled={!isBookable} 
+                    className="btn btn-primary btn-sm w-100"
+                    disabled={!isBookable || isTravelAgent}
                     onClick={() => { 
-                      setBookingItem(item); 
+                      if (isTravelAgent) return
+                      setBookingItem(item);
                       setBookForm({ startDate: '', endDate: '', numberOfGuests: 1, numberOfRooms: 1, roomType: item.itemType || '', notes: '' }) 
                     }}>
-                    Book Now
+                    {isTravelAgent ? 'Booking Disabled' : 'Book Now'}
                   </button>
+
                 </div>
               </div>
             </div>
@@ -186,8 +194,9 @@ export default function InventorySearch() {
         {filtered.length === 0 && <div className="col"><p className="text-muted">No inventory items found.</p></div>}
       </div>
 
-      {bookingItem && (
+      {!isTravelAgent && bookingItem && (
         <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
+
           <div className="modal-dialog">
             <form className="modal-content bg-secondary bg-opacity-10 border-secondary rounded-0" onSubmit={handleBook}>
               <div className="modal-header bg-dark border-secondary">

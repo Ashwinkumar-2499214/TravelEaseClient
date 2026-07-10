@@ -7,15 +7,14 @@ import DashboardPage from './pages/DashboardPage'
 import Unauthorized from './pages/Unauthorized'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-import './index.css'
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="d-flex flex-column min-vh-100 bg-dark">
+        <div className="d-flex flex-column min-vh-100">
           <Navbar />
-          <div className="flex-grow-1">
+          <main className="flex-grow-1" style={{ paddingTop: '86px', paddingBottom: '0' }}>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
@@ -24,7 +23,7 @@ function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
-          </div>
+          </main>
           <Footer />
         </div>
       </AuthProvider>

@@ -38,6 +38,7 @@ export default function AdminDashboard() {
         <Route path="partners" element={<PartnersManager />} />
         <Route path="users" element={<UserManager />} />
         <Route path="bookings" element={<BookingsManager agentMode={true} />} />
+        <Route path="approvals" element={<BookingsManager approvalMode={true} pendingOnly={true} />} />
         <Route path="itineraries" element={<ItinerariesManager />} />
         <Route path="invoices" element={<InvoicesManager />} />
         <Route path="compliance" element={<ComplianceManager />} />

@@ -2,14 +2,13 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import authService from '../features/authentication/services/authService'
 
-// ✅ 1. Updated values to match C# Enum integers
 const ROLES = [
   { label: 'Traveler', value: 1 },
   { label: 'Travel Agent', value: 2 },
   { label: 'Corporate Travel Manager', value: 3 },
   { label: 'Finance Officer', value: 4 },
   { label: 'Compliance Officer', value: 5 },
-  { label: 'Admin', value: 6 },
+  { label: 'Admin', value: 6 }
 ]
 
 export default function RegisterPage() {
@@ -19,16 +18,17 @@ export default function RegisterPage() {
     phone: '',
     password: '',
     confirmPassword: '',
-    role: 1 // ✅ 2. Default to integer 1 (Traveler)
+    role: 1
   })
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+
   const navigate = useNavigate()
 
-  const set = (field) => (e) => {
-    setForm(p => ({
-      ...p,
+  const setField = (field) => (e) => {
+    setForm((prev) => ({
+      ...prev,
       [field]: e.target.value
     }))
   }
@@ -37,7 +37,8 @@ export default function RegisterPage() {
     e.preventDefault()
 
     if (form.password !== form.confirmPassword) {
-      return setError('Passwords do not match')
+      setError('Passwords do not match')
+      return
     }
 
     setLoading(true)
@@ -49,7 +50,7 @@ export default function RegisterPage() {
         email: form.email,
         phone: form.phone,
         password: form.password,
-        role: Number(form.role) // ✅ 3. Cast the string from the select dropdown back to an integer
+        role: Number(form.role)
       })
 
       navigate('/login')
@@ -66,114 +67,247 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-dark">
-      <div className="card bg-secondary bg-opacity-10 border-secondary rounded-0" style={{ width: '100%', maxWidth: 420 }}>
-        <div className="card-header bg-dark border-secondary d-flex align-items-center justify-content-between">
-          <div>
-            <h5 className="text-white font-monospace text-uppercase mb-1">System Registration</h5>
-            <small className="text-light font-monospace">TravelEase Terminal v2.1</small>
-          </div>
-          <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
-        </div>
-        <form onSubmit={submit} className="card-body p-4">
-          {error && (
-            <div className="alert alert-danger border-0 rounded-0 bg-danger bg-opacity-10 text-danger py-2 mb-3">
-              <i className="fas fa-exclamation-triangle me-2"></i>{error}
-            </div>
-          )}
-          
-          <div className="d-flex flex-column gap-3">
-            <div>
-              <label className="form-label text-white font-monospace text-uppercase small">Full Name</label>
-              <input
-                type="text"
-                className="form-control bg-dark text-white border-secondary rounded-0"
-                value={form.name}
-                onChange={set('name')}
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="form-label text-white font-monospace text-uppercase small">Email Address</label>
-              <input
-                type="email"
-                className="form-control bg-dark text-white border-secondary rounded-0"
-                value={form.email}
-                onChange={set('email')}
-                autoComplete="email"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="form-label text-white font-monospace text-uppercase small">Phone Number</label>
-              <input
-                type="tel"
-                className="form-control bg-dark text-white border-secondary rounded-0"
-                value={form.phone}
-                onChange={set('phone')}
-                placeholder="Enter phone number"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="form-label text-white font-monospace text-uppercase small">System Role</label>
-              <select
-                className="form-select bg-dark text-white border-secondary rounded-0"
-                value={form.role}
-                onChange={set('role')}
+    <div
+      className="container-fluid"
+      style={{
+        height: 'calc(100vh - 130px)',
+        marginTop: '70px',
+        marginBottom: '60px',
+        backgroundColor: '#f8f9fa'
+      }}
+    >
+      <div className="row h-100">
+
+        {/* Left Side Form */}
+        <div className="col-lg-6 d-flex align-items-center justify-content-center bg-white">
+
+          <div
+            className="card border-0 shadow-sm"
+            style={{
+              width: '100%',
+              maxWidth: '430px'
+            }}
+          >
+            <div className="card-body p-3">
+
+              <h2
+                className="fw-bold mb-1"
+                style={{ color: '#6f42c1' }}
               >
-                {ROLES.map(r => (
-                  <option key={r.value} value={r.value} className="bg-dark text-white">
-                    {r.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="form-label text-white font-monospace text-uppercase small">Password</label>
-              <input
-                type="password"
-                className="form-control bg-dark text-white border-secondary rounded-0"
-                value={form.password}
-                onChange={set('password')}
-                autoComplete="new-password"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="form-label text-white font-monospace text-uppercase small">Confirm Password</label>
-              <input
-                type="password"
-                className="form-control bg-dark text-white border-secondary rounded-0"
-                value={form.confirmPassword}
-                onChange={set('confirmPassword')}
-                required
-              />
-            </div>
-            
-            <button className="btn btn-outline-info rounded-0 font-monospace text-uppercase" disabled={loading}>
-              {loading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" />
-                  <span className="font-monospace">Processing...</span>
-                </>
-              ) : (
-                'Register User'
+                Create Account
+              </h2>
+
+              <p className="text-muted mb-3">
+                Join TravelEase today.
+              </p>
+
+              {error && (
+                <div className="alert alert-danger py-2">
+                  {error}
+                </div>
               )}
-            </button>
+
+              <form onSubmit={submit}>
+
+                <div className="mb-2">
+                  <label className="form-label small">
+                    Full Name
+                  </label>
+
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={form.name}
+                    onChange={setField('name')}
+                    required
+                  />
+                </div>
+
+                <div className="mb-2">
+                  <label className="form-label small">
+                    Email Address
+                  </label>
+
+                  <input
+                    type="email"
+                    className="form-control form-control-sm"
+                    value={form.email}
+                    onChange={setField('email')}
+                    required
+                  />
+                </div>
+
+                <div className="mb-2">
+                  <label className="form-label small">
+                    Phone Number
+                  </label>
+
+                  <input
+                    type="tel"
+                    className="form-control form-control-sm"
+                    value={form.phone}
+                    onChange={setField('phone')}
+                    required
+                  />
+                </div>
+
+                <div className="mb-2">
+                  <label className="form-label small">
+                    Role
+                  </label>
+
+                  <select
+                    className="form-select form-select-sm"
+                    value={form.role}
+                    onChange={setField('role')}
+                  >
+                    {ROLES.map((role) => (
+                      <option
+                        key={role.value}
+                        value={role.value}
+                      >
+                        {role.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-2">
+                  <label className="form-label small">
+                    Password
+                  </label>
+
+                  <input
+                    type="password"
+                    className="form-control form-control-sm"
+                    value={form.password}
+                    onChange={setField('password')}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label small">
+                    Confirm Password
+                  </label>
+
+                  <input
+                    type="password"
+                    className="form-control form-control-sm"
+                    value={form.confirmPassword}
+                    onChange={setField('confirmPassword')}
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn text-white w-100"
+                  style={{
+                    backgroundColor: '#6f42c1'
+                  }}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      Creating Account...
+                    </>
+                  ) : (
+                    'Create Account'
+                  )}
+                </button>
+
+                <div className="text-center mt-3">
+                  <small className="text-muted">
+                    Already have an account?{' '}
+                  </small>
+
+                  <Link
+                    to="/login"
+                    className="text-decoration-none fw-semibold"
+                    style={{ color: '#6f42c1' }}
+                  >
+                    Sign In
+                  </Link>
+                </div>
+
+              </form>
+
+            </div>
           </div>
-          
-          <div className="text-center mt-4">
-            <small className="text-light font-monospace">
-              Existing User? <Link to="/login" className="text-info text-decoration-none">Sign in</Link>
-            </small>
+
+        </div>
+        {/* Right Travel Panel */}
+        <div className="col-lg-6 d-none d-lg-block p-0 position-relative">
+
+
+
+          <div
+            className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+            style={{
+              backgroundColor: 'rgba(111,66,193,0.65)'
+            }}
+          >
+            <div className="text-center text-white px-5">
+
+              <i
+                className="fas fa-plane-departure mb-4"
+                style={{
+                  fontSize: '4rem'
+                }}
+              ></i>
+
+              <h1 className="display-4 fw-bold mb-3">
+                TravelEase
+              </h1>
+
+              <p className="lead">
+                Book flights, manage itineraries,
+                approve travel requests and simplify
+                corporate travel from one platform.
+              </p>
+
+              <div className="row g-3 mt-4">
+
+                <div className="col-6">
+                  <div className="card bg-white bg-opacity-25 border-0 text-white">
+                    <div className="card-body">
+                      Flight Booking
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-6">
+                  <div className="card bg-white bg-opacity-25 border-0 text-white">
+                    <div className="card-body">
+                      Itineraries
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-6">
+                  <div className="card bg-white bg-opacity-25 border-0 text-white">
+                    <div className="card-body">
+                      Approvals
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-6">
+                  <div className="card bg-white bg-opacity-25 border-0 text-white">
+                    <div className="card-body">
+                      Expenses
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
           </div>
-        </form>
+
+        </div>
       </div>
     </div>
   )

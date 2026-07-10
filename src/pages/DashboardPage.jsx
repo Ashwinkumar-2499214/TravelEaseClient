@@ -22,14 +22,24 @@ const ROLE_DASHBOARD = {
 export default function DashboardPage() {
   const { currentUser, authReady } = useAuth()
 
-  if (!authReady) return (
-    <div className="d-flex justify-content-center align-items-center bg-dark" style={{ minHeight: '60vh' }}>
-      <div className="d-flex flex-column align-items-center">
-        <div className="spinner-border text-info mb-3" />
-        <span className="text-light font-monospace">Loading System...</span>
+  if (!authReady)
+    return (
+      <div style={{ minHeight: '60vh', display: 'grid', placeItems: 'center' }}>
+        <div
+          aria-label="Loading"
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 999,
+            border: '3px solid rgba(124,58,237,.20)',
+            borderTopColor: 'rgba(124,58,237,1)',
+            animation: 'teSpin 0.9s linear infinite',
+          }}
+        />
+        <style>{`@keyframes teSpin{to{transform:rotate(360deg)}}`}</style>
       </div>
-    </div>
-  )
+    )
+
 
   if (!currentUser) return <Navigate to="/login" replace />
 
@@ -37,9 +47,11 @@ export default function DashboardPage() {
   const RoleDashboard = ROLE_DASHBOARD[role] || TravelerDashboard
 
   return (
-    <div className="d-flex" style={{ minHeight: 'calc(100vh - 112px)' }}>
+    <div className="d-flex" style={{ minHeight: 'calc(100vh - 86px)' }}>
       <Sidebar />
-      <div className="flex-grow-1 p-3 bg-dark">
+      <div className="flex-grow-1" style={{ padding: 18, background: 'white' }}>
+
+
         <ProtectedRoute>
           <Routes>
             <Route path="/*" element={<RoleDashboard />} />

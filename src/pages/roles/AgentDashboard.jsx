@@ -1,9 +1,9 @@
 import React from 'react'
 import { Routes, Route, NavLink } from 'react-router-dom'
-import BookingsManager from '../../features/bookings-reservations/components/BookingsManager'
 import InventorySearch from '../../features/partners-inventory/components/InventorySearch'
-import ItinerariesManager from '../../features/itineraries/components/ItinerariesManager'
 import NotificationsPage from '../NotificationsPage'
+import PartnersManager from '../../features/partners-inventory/components/PartnersManager'
+
 
 export default function AgentDashboard() {
   return (
@@ -13,8 +13,6 @@ export default function AgentDashboard() {
         {[
           ['overview', 'Overview'],
           ['inventory', 'Check Availability'],
-          ['bookings', 'Manage Bookings'],
-          ['itineraries', 'Itineraries'],
           ['notifications', 'Notifications'],
         ].map(([path, label]) => (
           <li className="nav-item" key={path}>
@@ -25,9 +23,8 @@ export default function AgentDashboard() {
       <Routes>
         <Route index element={<AgentOverview />} />
         <Route path="overview" element={<AgentOverview />} />
+        <Route path="partners" element={<PartnersManager agentMode={true} />} />
         <Route path="inventory" element={<InventorySearch />} />
-        <Route path="bookings" element={<BookingsManager agentMode={true} />} />
-        <Route path="itineraries" element={<ItinerariesManager />} />
         <Route path="notifications" element={<NotificationsPage />} />
       </Routes>
     </div>
@@ -39,8 +36,6 @@ function AgentOverview() {
     <div className="row g-3">
       {[
         { label: 'Check Availability', desc: 'Live partner inventory search', icon: 'fa-solid fa-magnifying-glass', path: 'inventory', color: 'primary' },
-        { label: 'Manage Bookings', desc: 'Create & modify bookings for travelers', icon: 'fa-solid fa-suitcase', path: 'bookings', color: 'success' },
-        { label: 'Itineraries', desc: 'Build and track travel plans', icon: 'fa-solid fa-route', path: 'itineraries', color: 'info' },
       ].map(card => (
         <div className="col-md-4" key={card.path}>
           <NavLink to={card.path} className="text-decoration-none">

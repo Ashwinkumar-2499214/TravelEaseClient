@@ -25,10 +25,12 @@ const EMPTY_FORM = {
   specialRequests: '',
 }
 
-export default function BookingsManager({ agentMode = false }) {
+export default function BookingsManager({ agentMode = false, approvalMode = false, pendingOnly = false }) {
   const { currentUser } = useAuth()
   const isAdmin = currentUser?.role === 'Admin'
   const isAdminOrFinance = ['Admin', 'FinanceOfficer'].includes(currentUser?.role)
+  const isTravelAgent = currentUser?.role === 'TravelAgent'
+
 
   const [bookings, setBookings] = useState([])
   const [inventory, setInventory] = useState([])
@@ -47,11 +49,22 @@ export default function BookingsManager({ agentMode = false }) {
   const [paying, setPaying] = useState(false)
   const [submittingPayment, setSubmittingPayment] = useState(false)
 
-  const load = () => {
+const load = () => {
     setLoading(true)
     setError(null)
-    bookingsService.list(isAdminOrFinance ? {} : { userId: currentUser?.id })
-      .then(data => setBookings(data ? (Array.isArray(data) ? data : [data]) : []))
+
+    // CorporateTravelManager should see bookings for all users.
+    // Admin/Finance also see all bookings.
+    // BookingsManager (including approvals) relies on bookingsService.list() for data.
+    return bookingsService.list().
+      then(data => {
+        const list = data ? (Array.isArray(data) ? data : [data]) : []
+        if (pendingOnly) {
+          setBookings(list.filter((b) => Number(b.status) === 1 || b.status === 'Pending'))
+        } else {
+          setBookings(list)
+        }
+      })
       .catch(e => setError(e.response?.data?.message || e.message))
       .finally(() => setLoading(false))
   }
@@ -64,10 +77,12 @@ export default function BookingsManager({ agentMode = false }) {
   }, [currentUser])
 
   const openCreate = () => {
+    if (isTravelAgent) return
     setEditBooking(null)
     setForm(EMPTY_FORM)
     setShowModal(true)
   }
+
 
   const openEdit = (booking) => {
     setEditBooking(booking)
@@ -219,11 +234,16 @@ export default function BookingsManager({ agentMode = false }) {
           <h5 className="text-white font-monospace text-uppercase mb-1">{agentMode ? 'Bookings (Agent View)' : 'My Bookings'}</h5>
           <small className="text-light font-monospace">Hotel Booking Management</small>
         </div>
-        <div className="d-flex align-items-center gap-3">
+                  <div className="d-flex align-items-center gap-3">
           <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
-          <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
-            <i className="fa-solid fa-plus me-2" />New Booking
-          </button>
+          {!isTravelAgent && (
+            <button
+              className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase"
+              onClick={openCreate}
+            >
+              <i className="fa-solid fa-plus me-2" />New Booking
+            </button>
+          )}
         </div>
       </div>
 
@@ -260,10 +280,10 @@ export default function BookingsManager({ agentMode = false }) {
                     <td className="border-secondary bg-darker">
                       <div className="d-flex align-items-center gap-2">
                         {statusBadge(booking.status)}
-                        {isAdmin && (
+                        {(approvalMode || (!agentMode && isAdmin)) && (
                           <select
                             className="form-select form-select-sm bg-dark text-white border-secondary rounded-0"
-                            style={{ width: 120 }}
+                            style={{ width: 140 }}
                             value={booking.status}
                             onChange={(e) => handleStatusChange(bid, e.target.value)}
                           >
@@ -281,9 +301,30 @@ export default function BookingsManager({ agentMode = false }) {
                         <button className="btn btn-outline-secondary rounded-0" onClick={() => setExpandedId(expandedId === bid ? null : bid)}>
                           <i className={`fa-solid ${expandedId === bid ? 'fa-chevron-up' : 'fa-chevron-down'}`} />
                         </button>
-                        <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(booking)}><i className="fa-solid fa-pen" /></button>
-                        <button className="btn btn-outline-success rounded-0" onClick={() => openPay(booking)}><i className="fa-solid fa-credit-card" /></button>
-                        <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(bid)}><i className="fa-solid fa-trash" /></button>
+                        <button
+                          className="btn btn-outline-info rounded-0"
+                          onClick={() => openEdit(booking)}
+                          disabled={isTravelAgent}
+                          title={isTravelAgent ? 'Not allowed for TravelAgent' : 'Edit booking'}
+                        >
+                          <i className="fa-solid fa-pen" />
+                        </button>
+                        <button
+                          className="btn btn-outline-success rounded-0"
+                          onClick={() => openPay(booking)}
+                          disabled={isTravelAgent}
+                          title={isTravelAgent ? 'Not allowed for TravelAgent' : 'Create invoice/payment'}
+                        >
+                          <i className="fa-solid fa-credit-card" />
+                        </button>
+                        <button
+                          className="btn btn-outline-danger rounded-0"
+                          onClick={() => handleDelete(bid)}
+                          disabled={isTravelAgent}
+                          title={isTravelAgent ? 'Not allowed for TravelAgent' : 'Delete booking'}
+                        >
+                          <i className="fa-solid fa-trash" />
+                        </button>
                       </div>
                     </td>
                   </tr>

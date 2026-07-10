@@ -7,13 +7,13 @@ import DashboardPage from './pages/DashboardPage'
 import Unauthorized from './pages/Unauthorized'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-import './index.css'
 
 function App() {
+
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="d-flex flex-column min-vh-100 bg-dark">
+        <div className="d-flex flex-column min-vh-100">
           <Navbar />
           <div className="flex-grow-1">
             <Routes>

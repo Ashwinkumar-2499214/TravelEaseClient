@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Routes, Route, NavLink } from 'react-router-dom'
-import bookingsService from '../../features/bookings-reservations/services/bookingsService'
+import BookingsManager from '../../features/bookings-reservations/components/BookingsManager'
 import AnalyticsDashboard from '../../features/analytics-reporting/components/AnalyticsDashboard'
 import NotificationsPanel from '../../features/notifications/components/NotificationsPanel'
-import { formatDate } from '../../utils/date'
 
 export default function ManagerDashboard() {
   return (
@@ -59,61 +58,12 @@ function ManagerOverview() {
 }
 
 function TravelApprovalsPanel() {
-  const [bookings, setBookings] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  const load = () => {
-    setLoading(true)
-    bookingsService.list()
-      .then(data => setBookings(data.filter(b => b.status === 'Pending')))
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(() => { load() }, [])
-
-  const handleAction = async (id, status) => {
-    try { await bookingsService.patchStatus(id, status); load() }
-    catch (err) { alert(err?.response?.data?.message || err.message) }
-  }
-
-  if (loading) return <div className="text-center py-4"><div className="spinner-border" /></div>
-  if (error) return <div className="alert alert-danger">{error}</div>
-
+  // Reuse the same Bookings table UI used by Admin/Agent view,
+  // but restrict it to Pending bookings and allow status changes.
   return (
     <div>
-      <h5 className="mb-3">Pending Travel Requests</h5>
-      {bookings.length === 0 ? (
-        <div className="alert alert-success"><i className="fa-solid fa-check me-2" />No pending requests.</div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-hover table-bordered align-middle">
-            <thead className="table-dark">
-              <tr><th>Reference</th><th>Traveler</th><th>Start</th><th>End</th><th>Notes</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-              {bookings.map(b => (
-                <tr key={b.id}>
-                  <td>{b.reference || b.id}</td>
-                  <td>{b.travelerId || '-'}</td>
-                  <td>{formatDate(b.startDate)}</td>
-                  <td>{formatDate(b.endDate)}</td>
-                  <td className="text-muted small">{b.notes || '-'}</td>
-                  <td>
-                    <button className="btn btn-sm btn-success me-1" onClick={() => handleAction(b.id, 'Confirmed')}>
-                      <i className="fa-solid fa-check me-1" />Approve
-                    </button>
-                    <button className="btn btn-sm btn-danger" onClick={() => handleAction(b.id, 'Cancelled')}>
-                      <i className="fa-solid fa-xmark me-1" />Reject
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <h5 className="mb-3">Travel Approvals</h5>
+      <BookingsManager agentMode={true} approvalMode={true} pendingOnly={true} />
     </div>
   )
 }

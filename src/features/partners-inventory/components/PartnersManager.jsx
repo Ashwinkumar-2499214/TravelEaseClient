@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react'
+import { useAuth } from '../../authentication/AuthProvider'
 import partnersService from '../services/partnersService'
 import inventoryService from '../services/inventoryService'
-
+ 
 const PARTNER_TYPES = [{ value: 1, label: 'Hotel' }, { value: 2, label: 'Transport Provider' }, { value: 3, label: 'Tour Operator' }]
 const PARTNER_STATUSES = [{ value: 1, label: 'Active' }, { value: 2, label: 'Inactive' }]
-
+ 
 const getTypeLabel = (val) => PARTNER_TYPES.find(t => t.value === Number(val))?.label ?? val
 const getStatusLabel = (val) => PARTNER_STATUSES.find(s => s.value === Number(val))?.label ?? val
-
+ 
 const EMPTY = { name: '', type: '', status: 1, contactEmail: '', contactPhone: '', address: '' }
-
-export default function PartnersManager() {
+ 
+export default function PartnersManager({ agentMode = false }) {
+  const { currentUser } = useAuth()
+  const isAdmin = currentUser?.role === 'Admin'
+  const hideActions = isAdmin && !agentMode
   const [partners, setPartners] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -19,41 +23,41 @@ export default function PartnersManager() {
   const [form, setForm] = useState(EMPTY)
   const [expandedId, setExpandedId] = useState(null)
   const [searchInput, setSearchInput] = useState('')
-
+ 
   const load = (searchVal = searchInput) => {
     setLoading(true)
     setError(null)
-
+ 
     const queryParams = {}
     const finalSearch = searchVal.trim()
-    
+   
     queryParams.SearchTerm = finalSearch === '' ? 'a' : finalSearch
-
+ 
     partnersService.list(queryParams)
       .then(setPartners)
       .catch(e => setError(e.response?.data?.title || e.message))
       .finally(() => setLoading(false))
   }
-
+ 
   useEffect(() => { load() }, [])
-
+ 
   const handleSearchSubmit = (e) => {
     e.preventDefault()
     load(searchInput)
   }
-
+ 
   const handleClearSearch = () => {
     setSearchInput('')
-    load('') 
+    load('')
   }
-
+ 
   const openCreate = () => { setEditPartner(null); setForm(EMPTY); setShowModal(true) }
   const openEdit = (p) => {
     setEditPartner(p)
     setForm({ name: p.name || '', type: p.type || '', status: p.status || 1, contactEmail: p.contactEmail || '', contactPhone: p.contactPhone || '', address: p.address || '' })
     setShowModal(true)
   }
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
@@ -62,13 +66,13 @@ export default function PartnersManager() {
       setShowModal(false); load()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
-
+ 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete partner?')) return
     try { await partnersService.remove(id); load() }
     catch (err) { alert(err?.response?.data?.message || err.message) }
   }
-
+ 
   const toggleStatus = async (p) => {
     const partnerId = p.id || p.PartnerId || p.partnerId || p._id
     const currentStatus = Number(p.status)
@@ -76,10 +80,10 @@ export default function PartnersManager() {
     try { await partnersService.patchStatus(partnerId, next); load() }
     catch (err) { alert(err?.response?.data?.message || err.message) }
   }
-
+ 
   if (loading) return <div className="text-center py-4"><div className="spinner-border" /></div>
   if (error) return <div className="alert alert-danger m-3">{error}</div>
-
+ 
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
@@ -87,26 +91,31 @@ export default function PartnersManager() {
           <h5 className="text-white font-monospace text-uppercase mb-1">Partners Registry</h5>
           <small className="text-light font-monospace">Vendor Management System</small>
         </div>
-        <div className="d-flex align-items-center gap-3">
+        {!hideActions && (
+          <div className="d-flex align-items-center gap-3">
+            <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
+            <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
+              <i className="fa-solid fa-plus me-2" />Add Partner
+            </button>
+          </div>
+        )}
+        {hideActions && (
           <div className="spinner-grow spinner-grow-sm text-info" role="status"></div>
-          <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase" onClick={openCreate}>
-            <i className="fa-solid fa-plus me-2" />Add Partner
-          </button>
-        </div>
+        )}
       </div>
-
+ 
       <form onSubmit={handleSearchSubmit} className="d-flex gap-2 mb-4 p-2 bg-secondary bg-opacity-10 border-secondary rounded-0">
-        <input 
-          type="text" 
-          className="form-control form-control-sm bg-dark text-light border-secondary rounded-0" 
-          placeholder="Type search here..." 
+        <input
+          type="text"
+          className="form-control form-control-sm bg-dark text-light border-secondary rounded-0"
+          placeholder="Type search here..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />
         <button type="submit" className="btn btn-outline-info btn-sm rounded-0 font-monospace">Search</button>
         {searchInput !== 'a' && (
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="btn btn-outline-secondary btn-sm rounded-0 font-monospace"
             onClick={handleClearSearch}
           >
@@ -114,7 +123,7 @@ export default function PartnersManager() {
           </button>
         )}
       </form>
-
+ 
       <div className="table-responsive">
         <table className="table table-dark table-hover align-middle rounded-0 border-secondary">
           <thead className="bg-info text-dark">
@@ -124,7 +133,7 @@ export default function PartnersManager() {
               <th className="font-monospace text-uppercase small border-secondary">Contact Email</th>
               <th className="font-monospace text-uppercase small border-secondary">Contact Phone</th>
               <th className="font-monospace text-uppercase small border-secondary">Status</th>
-              <th className="font-monospace text-uppercase small border-secondary">Actions</th>
+              {!hideActions && <th className="font-monospace text-uppercase small border-secondary">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -141,22 +150,24 @@ export default function PartnersManager() {
                   <td className="text-secondary font-monospace border-secondary bg-darker">{p.contactEmail}</td>
                   <td className="text-secondary font-monospace border-secondary bg-darker">{p.contactPhone}</td>
                   <td className="border-secondary bg-darker"><span className={`badge ${getStatusLabel(p.status) === 'Active' ? 'bg-success' : 'bg-secondary'} font-monospace`}>{getStatusLabel(p.status)}</span></td>
-                  <td className="border-secondary bg-darker">
-                    <div className="btn-group btn-group-sm">
-                      <button className="btn btn-outline-warning rounded-0" onClick={() => toggleStatus(p)} title="Toggle status"><i className="fa-solid fa-toggle-on" /></button>
-                      <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(p)}><i className="fa-solid fa-pen" /></button>
-                      <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(p.id || p.PartnerId || p.partnerId || p._id)}><i className="fa-solid fa-trash" /></button>
-                    </div>
-                  </td>
+                  {!hideActions && (
+                    <td className="border-secondary bg-darker">
+                      <div className="btn-group btn-group-sm">
+                        <button className="btn btn-outline-warning rounded-0" onClick={() => toggleStatus(p)} title="Toggle status"><i className="fa-solid fa-toggle-on" /></button>
+                        <button className="btn btn-outline-info rounded-0" onClick={() => openEdit(p)}><i className="fa-solid fa-pen" /></button>
+                        <button className="btn btn-outline-danger rounded-0" onClick={() => handleDelete(p.id || p.PartnerId || p.partnerId || p._id)}><i className="fa-solid fa-trash" /></button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
                 {expandedId === (p.id || p.PartnerId || p.partnerId || p._id) && (
-                  <PartnerInventoryRow partnerId={p.id || p.PartnerId || p.partnerId || p._id} />
+                  <PartnerInventoryRow partnerId={p.id || p.PartnerId || p.partnerId || p._id} isAdmin={hideActions} />
                 )}
               </React.Fragment>
             ))}
             {partners.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                <td colSpan={!hideActions ? 6 : 5} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
                   <i className="fa-solid fa-handshake me-2"></i>
                   <span className="font-monospace">No partners found in registry.</span>
                 </td>
@@ -165,7 +176,7 @@ export default function PartnersManager() {
           </tbody>
         </table>
       </div>
-
+ 
       {showModal && (
         <div className="modal show d-block" style={{ background: 'rgba(0,0,0,.8)' }}>
           <div className="modal-dialog">
@@ -220,8 +231,8 @@ export default function PartnersManager() {
     </div>
   )
 }
-
-function PartnerInventoryRow({ partnerId }) {
+ 
+function PartnerInventoryRow({ partnerId, isAdmin: hideActions }) {
   const [inventory, setInventory] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
@@ -229,7 +240,7 @@ function PartnerInventoryRow({ partnerId }) {
   const [editItem, setEditItem] = useState(null)
   const [mediaManager, setMediaManager] = useState({ showMedia: false, itemId: null })
   const [form, setForm] = useState({ itemType: '', description: '', price: '', availability: '', status: 'Available' })
-
+ 
   const INVENTORY_STATUSES = [
     { value: 'Available', label: 'Available' },
     { value: 'Limited', label: 'Limited' },
@@ -237,7 +248,7 @@ function PartnerInventoryRow({ partnerId }) {
     { value: 'Unavailable', label: 'Unavailable' },
     { value: 'Maintenance', label: 'Maintenance' },
   ]
-
+ 
   const loadInv = () => {
     if (!partnerId) {
       setLoading(false)
@@ -246,7 +257,7 @@ function PartnerInventoryRow({ partnerId }) {
     return partnersService.listInventory(partnerId).then(setInventory).catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(() => { loadInv() }, [partnerId])
-
+ 
   const addItem = async (e) => {
     e.preventDefault()
     if (!partnerId) {
@@ -260,7 +271,7 @@ function PartnerInventoryRow({ partnerId }) {
       loadInv()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
-
+ 
   const openEditItem = (item) => {
     setEditItem(item)
     setForm({
@@ -272,7 +283,7 @@ function PartnerInventoryRow({ partnerId }) {
     })
     setShowEdit(true)
   }
-
+ 
   const updateItem = async (e) => {
     e.preventDefault()
     if (!partnerId || !editItem) {
@@ -286,7 +297,7 @@ function PartnerInventoryRow({ partnerId }) {
       setForm({ itemType: '', description: '', price: '', availability: '', status: 'Available' })
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
-
+ 
   const handleDeleteItem = async (inventoryId) => {
     if (!window.confirm('Delete this inventory item?')) return
     try {
@@ -294,7 +305,7 @@ function PartnerInventoryRow({ partnerId }) {
       loadInv()
     } catch (err) { alert(err?.response?.data?.message || err.message) }
   }
-
+ 
   const handleStatusChange = async (inventoryId, newStatus) => {
     const prev = inventory.find(i => i.inventoryId === inventoryId)
     setInventory(prev => prev.map(i => i.inventoryId === inventoryId ? { ...i, status: newStatus } : i))
@@ -306,11 +317,11 @@ function PartnerInventoryRow({ partnerId }) {
       loadInv()
     }
   }
-
+ 
   const handleOpenMediaManager = (item) => {
     setMediaManager({ showMedia: true, itemId: item.inventoryId })
   }
-
+ 
   return (
     <tr className="bg-secondary bg-opacity-25 border-secondary">
       <td colSpan={6} className="ps-5 border-secondary">
@@ -335,7 +346,7 @@ function PartnerInventoryRow({ partnerId }) {
                     <th className="font-monospace text-uppercase small border-secondary">Price</th>
                     <th className="font-monospace text-uppercase small border-secondary">Availability</th>
                     <th className="font-monospace text-uppercase small border-secondary">Status</th>
-                    <th className="font-monospace text-uppercase small border-secondary">Actions</th>
+                    {!hideActions && <th className="font-monospace text-uppercase small border-secondary">Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -347,10 +358,10 @@ function PartnerInventoryRow({ partnerId }) {
                         <td className="text-secondary font-monospace border-secondary bg-darker">${i.price}</td>
                         <td className="text-secondary font-monospace border-secondary bg-darker">{i.availability}</td>
                         <td className="border-secondary bg-darker">
-                          <select 
-                            className="form-select form-select-sm bg-dark text-white border-secondary rounded-0" 
-                            style={{ width: 100 }} 
-                            value={i.status} 
+                          <select
+                            className="form-select form-select-sm bg-dark text-white border-secondary rounded-0"
+                            style={{ width: 100 }}
+                            value={i.status}
                             onChange={e => handleStatusChange(i.inventoryId, e.target.value)}
                           >
                             {INVENTORY_STATUSES.map(s => (
@@ -360,19 +371,21 @@ function PartnerInventoryRow({ partnerId }) {
                             ))}
                           </select>
                         </td>
-                        <td className="border-secondary bg-darker">
-                          <div className="btn-group btn-group-sm">
-                            <button className="btn btn-outline-warning rounded-0" onClick={() => openEditItem(i)} title="Edit">
-                              <i className="fa-solid fa-pen" />
-                            </button>
-                            <button className="btn btn-outline-secondary rounded-0" onClick={() => handleOpenMediaManager(i)} title="Media">
-                              <i className="fa-solid fa-images" />
-                            </button>
-                            <button className="btn btn-outline-danger rounded-0" onClick={() => handleDeleteItem(i.inventoryId)} title="Delete">
-                              <i className="fa-solid fa-trash" />
-                            </button>
-                          </div>
-                        </td>
+                        {!hideActions && (
+                          <td className="border-secondary bg-darker">
+                            <div className="btn-group btn-group-sm">
+                              <button className="btn btn-outline-warning rounded-0" onClick={() => openEditItem(i)} title="Edit">
+                                <i className="fa-solid fa-pen" />
+                              </button>
+                              <button className="btn btn-outline-secondary rounded-0" onClick={() => handleOpenMediaManager(i)} title="Media">
+                                <i className="fa-solid fa-images" />
+                              </button>
+                              <button className="btn btn-outline-danger rounded-0" onClick={() => handleDeleteItem(i.inventoryId)} title="Delete">
+                                <i className="fa-solid fa-trash" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                       {mediaManager.showMedia && mediaManager.itemId === i.inventoryId && (
                         <InventoryMediaManager partnerId={partnerId} inventoryId={i.inventoryId} onClose={() => setMediaManager({ showMedia: false, itemId: null })} onUpdated={loadInv} />
@@ -381,7 +394,7 @@ function PartnerInventoryRow({ partnerId }) {
                   ))}
                   {inventory.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
+                      <td colSpan={!hideActions ? 6 : 5} className="text-center text-light border-secondary bg-secondary bg-opacity-25">
                         <i className="fa-solid fa-warehouse me-2"></i>
                         <span className="font-monospace">No inventory items on record.</span>
                       </td>
@@ -391,9 +404,11 @@ function PartnerInventoryRow({ partnerId }) {
               </table>
             </div>
             {!showAdd && !showEdit ? (
-              <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase mt-2" onClick={() => setShowAdd(true)}>
-                <i className="fa-solid fa-plus me-2" />Add Item
-              </button>
+              !hideActions && (
+                <button className="btn btn-outline-info btn-sm rounded-0 font-monospace text-uppercase mt-2" onClick={() => setShowAdd(true)}>
+                  <i className="fa-solid fa-plus me-2" />Add Item
+                </button>
+              )
             ) : showAdd ? (
               <form onSubmit={addItem} className="d-flex gap-2 flex-wrap mt-2 p-3 bg-secondary bg-opacity-10 border-secondary rounded-0">
                 <input
@@ -405,33 +420,33 @@ function PartnerInventoryRow({ partnerId }) {
                   onChange={e => setForm(p => ({ ...p, itemType: e.target.value }))}
                   required
                 />
-                <textarea 
-                  className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" 
-                  style={{ width: 180 }} 
-                  placeholder="Description" 
+                <textarea
+                  className="form-control form-control-sm bg-dark text-white border-secondary rounded-0"
+                  style={{ width: 180 }}
+                  placeholder="Description"
                   rows={1}
-                  value={form.description || ''} 
-                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))} 
-                  required 
+                  value={form.description || ''}
+                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                  required
                 />
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" 
-                  style={{ width: 100 }} 
-                  placeholder="Price" 
-                  value={form.price} 
-                  onChange={e => setForm(p => ({ ...p, price: e.target.value }))} 
-                  required 
+                <input
+                  type="number"
+                  step="0.01"
+                  className="form-control form-control-sm bg-dark text-white border-secondary rounded-0"
+                  style={{ width: 100 }}
+                  placeholder="Price"
+                  value={form.price}
+                  onChange={e => setForm(p => ({ ...p, price: e.target.value }))}
+                  required
                 />
-                <input 
-                  type="number" 
-                  className="form-control form-control-sm bg-dark text-white border-secondary rounded-0" 
-                  style={{ width: 100 }} 
-                  placeholder="Availability" 
-                  value={form.availability} 
-                  onChange={e => setForm(p => ({ ...p, availability: e.target.value }))} 
-                  required 
+                <input
+                  type="number"
+                  className="form-control form-control-sm bg-dark text-white border-secondary rounded-0"
+                  style={{ width: 100 }}
+                  placeholder="Availability"
+                  value={form.availability}
+                  onChange={e => setForm(p => ({ ...p, availability: e.target.value }))}
+                  required
                 />
                 <select
                   className="form-select form-select-sm bg-dark text-white border-secondary rounded-0"
@@ -460,33 +475,33 @@ function PartnerInventoryRow({ partnerId }) {
                   onChange={e => setForm(p => ({ ...p, itemType: e.target.value }))}
                   required
                 />
-                <textarea 
-                  className="form-control form-control-sm bg-dark text-white border-warning rounded-0" 
-                  style={{ width: 180 }} 
-                  placeholder="Description" 
+                <textarea
+                  className="form-control form-control-sm bg-dark text-white border-warning rounded-0"
+                  style={{ width: 180 }}
+                  placeholder="Description"
                   rows={1}
-                  value={form.description || ''} 
-                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))} 
-                  required 
+                  value={form.description || ''}
+                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                  required
                 />
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  className="form-control form-control-sm bg-dark text-white border-warning rounded-0" 
-                  style={{ width: 100 }} 
-                  placeholder="Price" 
-                  value={form.price} 
-                  onChange={e => setForm(p => ({ ...p, price: e.target.value }))} 
-                  required 
+                <input
+                  type="number"
+                  step="0.01"
+                  className="form-control form-control-sm bg-dark text-white border-warning rounded-0"
+                  style={{ width: 100 }}
+                  placeholder="Price"
+                  value={form.price}
+                  onChange={e => setForm(p => ({ ...p, price: e.target.value }))}
+                  required
                 />
-                <input 
-                  type="number" 
-                  className="form-control form-control-sm bg-dark text-white border-warning rounded-0" 
-                  style={{ width: 100 }} 
-                  placeholder="Availability" 
-                  value={form.availability} 
-                  onChange={e => setForm(p => ({ ...p, availability: e.target.value }))} 
-                  required 
+                <input
+                  type="number"
+                  className="form-control form-control-sm bg-dark text-white border-warning rounded-0"
+                  style={{ width: 100 }}
+                  placeholder="Availability"
+                  value={form.availability}
+                  onChange={e => setForm(p => ({ ...p, availability: e.target.value }))}
+                  required
                 />
                 <select
                   className="form-select form-select-sm bg-dark text-white border-warning rounded-0"
@@ -511,13 +526,13 @@ function PartnerInventoryRow({ partnerId }) {
     </tr>
   )
 }
-
+ 
 function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
   const [media, setMedia] = useState([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
-
+ 
   const loadMedia = () => {
     setLoading(true)
     // Fetch media - the API returns inventory with media array
@@ -529,16 +544,16 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
       .catch(() => setMedia([]))
       .finally(() => setLoading(false))
   }
-
+ 
   useEffect(() => { loadMedia() }, [partnerId, inventoryId])
-
+ 
   const handleUpload = async (e) => {
     e.preventDefault()
     if (!selectedFile) {
       alert('Please select a file first')
       return
     }
-
+ 
     setUploading(true)
     try {
       await inventoryService.uploadMedia(partnerId, inventoryId, selectedFile)
@@ -552,7 +567,7 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
       setUploading(false)
     }
   }
-
+ 
   const handleDelete = async (mediaId) => {
     if (!window.confirm('Delete this media?')) return
     try {
@@ -561,13 +576,14 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
         {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Authorization': `Bearer ${localStorage.getItem('te_auth') ? JSON.parse(localStorage.getItem('te_auth')).token : ''}`
           }
         }
       )
 
+ 
       if (!response.ok) throw new Error('Delete failed')
-      
+     
       alert('Media deleted successfully!')
       loadMedia()
       onUpdated?.()
@@ -575,7 +591,7 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
       alert(err.message || 'Failed to delete media')
     }
   }
-
+ 
   return (
     <tr className="bg-secondary bg-opacity-25 border-secondary">
       <td colSpan={6} className="ps-5 border-secondary">
@@ -588,7 +604,7 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
             </button>
           </div>
         </div>
-
+ 
         {loading ? (
           <div className="d-flex align-items-center text-light font-monospace">
             <div className="spinner-border spinner-border-sm me-2" />
@@ -598,8 +614,8 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
           <>
             <div className="mb-3">
               <form onSubmit={handleUpload} className="d-flex gap-2 p-3 bg-info bg-opacity-10 border-info rounded-0">
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   className="form-control form-control-sm bg-dark text-light border-info rounded-0"
                   accept="image/*,video/*"
                   onChange={e => setSelectedFile(e.target.files?.[0])}
@@ -610,7 +626,7 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
                 </button>
               </form>
             </div>
-
+ 
             <div className="row g-2">
               {media.length > 0 ? media.map(m => (
                 <div key={m.mediaId} className="col-md-3">
@@ -625,8 +641,8 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
                     <div className="card-body p-2">
                       <small className="text-light d-block text-truncate">{m.fileName}</small>
                       <div className="btn-group btn-group-sm mt-2 w-100">
-                        <button 
-                          className="btn btn-outline-danger btn-sm rounded-0 w-100" 
+                        <button
+                          className="btn btn-outline-danger btn-sm rounded-0 w-100"
                           onClick={() => handleDelete(m.mediaId)}
                           title="Delete"
                         >
@@ -648,3 +664,4 @@ function InventoryMediaManager({ partnerId, inventoryId, onClose, onUpdated }) {
     </tr>
   )
 }
+ 

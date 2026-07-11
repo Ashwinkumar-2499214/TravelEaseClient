@@ -129,12 +129,12 @@ export default function UserManager() {
             <table className="table table-hover align-middle mb-0">
               <thead className="table-light">
                 <tr>
-                  <th className="small fw-bold text-secondary text-uppercase ps-4">Name</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Email</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Phone</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Role</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Status</th>
-                  <th className="small fw-bold text-secondary text-uppercase text-end pe-4">Actions</th>
+                  <th className="small fw-bold text-dark text-uppercase ps-4">Name</th>
+                  <th className="small fw-bold text-dark text-uppercase">Email</th>
+                  <th className="small fw-bold text-dark text-uppercase">Phone</th>
+                  <th className="small fw-bold text-dark text-uppercase">Role</th>
+                  <th className="small fw-bold text-dark text-uppercase">Status</th>
+                  <th className="small fw-bold text-dark text-uppercase text-end pe-4">Actions</th>
                 </tr>
               </thead>
               <tbody>

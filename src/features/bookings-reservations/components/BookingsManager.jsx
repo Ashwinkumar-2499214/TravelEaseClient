@@ -16,6 +16,31 @@ const STATUS_MAP = { 1: 'Pending', 2: 'Confirmed', 3: 'Cancelled', 4: 'Completed
 const STATUS_COLORS = { 1: 'warning', 2: 'success', 3: 'danger', 4: 'info' }
 const ROOM_TYPES = ['SINGLE', 'DOUBLE', 'SUITE']
 const STATUSES = [1, 2, 3, 4]
+
+// Payment Mappings based on TravelEaseServer.Enum
+const PAYMENT_STATUS_MAP = {
+  1: 'Pending',
+  2: 'Processing',
+  3: 'Completed',
+  4: 'Failed',
+  5: 'Refunded',
+  6: 'Cancelled'
+}
+const PAYMENT_STATUS_COLORS = {
+  1: 'warning',
+  2: 'info',
+  3: 'success',
+  4: 'danger',
+  5: 'secondary',
+  6: 'dark'
+}
+const PAYMENT_METHOD_MAP = {
+  1: 'Credit Card',
+  2: 'Bank Transfer',
+  3: 'Cash',
+  4: 'Online'
+}
+
 const EMPTY_FORM = {
   inventoryId: '',
   checkInDate: '',
@@ -30,6 +55,13 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
   const { currentUser } = useAuth()
   const isAdmin = currentUser?.role === 'Admin'
   const isTravelAgent = currentUser?.role === 'TravelAgent'
+  const isCorporateTravelManager = currentUser?.role === 'CorporateTravelManager'
+  
+  // Travelers are users who aren't management/agents
+  const isTraveler = !isAdmin && !isTravelAgent && !isCorporateTravelManager
+
+  // Flag to see who is authorized to change a booking's status
+  const canChangeStatus = isAdmin || isTravelAgent || isCorporateTravelManager
 
   const [bookings, setBookings] = useState([])
   const [inventory, setInventory] = useState([])
@@ -72,7 +104,7 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
   }, [currentUser])
 
   const openCreate = () => {
-    if (isTravelAgent) return
+    if (!isTraveler) return
     setEditBooking(null)
     setForm(EMPTY_FORM)
     setShowModal(true)
@@ -244,7 +276,9 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                 </p>
               </div>
             </div>
-            {!isTravelAgent && (
+            
+            {/* Hides booking button from managers/agents */}
+            {isTraveler && (
               <button
                 className="btn btn-primary btn-sm flex-shrink-0"
                 onClick={openCreate}
@@ -263,14 +297,14 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
           <table className="table table-hover align-middle mb-0">
             <thead style={{ backgroundColor: 'var(--te-purple-700)' }}>
               <tr>
-                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Hotel</th>
-                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Room Type</th>
-                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Check-In</th>
-                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Check-Out</th>
-                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Guests</th>
-                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Amount</th>
-                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Status</th>
-                <th className="text-white fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Actions</th>
+                <th className="text-dark fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Hotel</th>
+                <th className="text-dark fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Room Type</th>
+                <th className="text-dark fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Check-In</th>
+                <th className="text-dark fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Check-Out</th>
+                <th className="text-dark fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Guests</th>
+                <th className="text-dark fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Amount</th>
+                <th className="text-dark fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Status</th>
+                <th className="text-dark fw-600" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -295,9 +329,23 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                         <td>{booking.numberOfGuests || '-'}</td>
                         <td className="fw-600 text-purple">${Number(booking.amount || 0).toFixed(2)}</td>
                         <td>
-                          <span className={`badge bg-${statusColor}`} style={{ fontSize: '0.8rem', fontWeight: 500 }}>
-                            {STATUS_MAP[Number(booking.status)] || booking.status}
-                          </span>
+                          {/* Display dropdown if authorized (Admin, TravelAgent, CorporateTravelManager) otherwise static badge */}
+                          {canChangeStatus ? (
+                            <select 
+                              className={`form-select form-select-sm border-${statusColor} fw-500`}
+                              style={{ width: '130px', fontSize: '0.8rem' }}
+                              value={Number(booking.status)}
+                              onChange={(e) => handleStatusChange(bid, e.target.value)}
+                            >
+                              {STATUSES.map(st => (
+                                <option key={st} value={st}>{STATUS_MAP[st]}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className={`badge bg-${statusColor}`} style={{ fontSize: '0.8rem', fontWeight: 500 }}>
+                              {STATUS_MAP[Number(booking.status)] || booking.status}
+                            </span>
+                          )}
                         </td>
                         <td>
                           <div className="btn-group btn-group-sm" role="group">
@@ -312,7 +360,7 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                             <button
                               className="btn btn-outline-primary btn-sm"
                               onClick={() => openEdit(booking)}
-                              disabled={isTravelAgent}
+                              disabled={isTravelAgent || isCorporateTravelManager}
                               title="Edit booking"
                               style={{ borderColor: 'var(--te-purple-700)', color: 'var(--te-purple-700)' }}
                             >
@@ -321,7 +369,7 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                             <button
                               className="btn btn-outline-success btn-sm"
                               onClick={() => openPay(booking)}
-                              disabled={isTravelAgent}
+                              disabled={isTravelAgent || isCorporateTravelManager}
                               title="Create payment"
                               style={{ borderColor: 'var(--te-status-success)', color: 'var(--te-status-success)' }}
                             >
@@ -330,7 +378,7 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                             <button
                               className="btn btn-outline-danger btn-sm"
                               onClick={() => handleDelete(bid)}
-                              disabled={isTravelAgent}
+                              disabled={isTravelAgent || isCorporateTravelManager}
                               title="Delete booking"
                               style={{ borderColor: 'var(--te-status-danger)', color: 'var(--te-status-danger)' }}
                             >
@@ -456,7 +504,7 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                     <i className="bi bi-credit-card me-2"></i>
                     Create Invoice & Payment
                   </h5>
-                  <small style={{ opacity: 0.9 }}>Booking #{payBooking.bookingId ?? payBooking.id} — ${Number(payBooking.amount ?? 0).toFixed(2)}</small>
+                  <small style={{ opacity: 100, color: 'white' }}>${Number(payBooking.amount ?? 0).toFixed(2)}</small>
                 </div>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowPayModal(false)}></button>
               </div>
@@ -524,24 +572,20 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
                       <table className="table table-sm table-bordered mb-0">
                         <tbody>
                           <tr>
-                            <th className="fw-600 bg-gray-50" style={{ width: '150px' }}>Payment ID</th>
-                            <td>{paymentResult.paymentId ?? paymentResult.id}</td>
-                          </tr>
-                          <tr>
-                            <th className="fw-600 bg-gray-50">Invoice ID</th>
-                            <td>{paymentResult.invoiceId}</td>
-                          </tr>
-                          <tr>
                             <th className="fw-600 bg-gray-50">Amount</th>
                             <td className="text-purple fw-600">${Number(paymentResult.amount).toFixed(2)}</td>
                           </tr>
                           <tr>
                             <th className="fw-600 bg-gray-50">Method</th>
-                            <td>{paymentResult.method}</td>
+                            <td>{PAYMENT_METHOD_MAP[Number(paymentResult.method)] || paymentResult.method}</td>
                           </tr>
                           <tr>
                             <th className="fw-600 bg-gray-50">Status</th>
-                            <td><span className="badge bg-success">{paymentResult.status}</span></td>
+                            <td>
+                              <span className={`badge bg-${PAYMENT_STATUS_COLORS[Number(paymentResult.status)] || 'secondary'}`}>
+                                {PAYMENT_STATUS_MAP[Number(paymentResult.status)] || paymentResult.status}
+                              </span>
+                            </td>
                           </tr>
                         </tbody>
                       </table>

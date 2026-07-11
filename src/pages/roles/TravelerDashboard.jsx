@@ -36,38 +36,6 @@ export default function TravelerDashboard() {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <ul className="nav nav-tabs mb-4" style={{ borderBottomColor: '#e5e7eb', borderBottomWidth: '2px' }}>
-        {[
-          ['overview', 'Overview', 'bi-house-fill'],
-          ['search', 'Search', 'bi-search'],
-          ['bookings', 'Bookings', 'bi-briefcase-fill'],
-          ['itineraries', 'Itineraries', 'bi-map-fill'],
-          ['invoices', 'Invoices', 'bi-file-earmark-text-fill'],
-          ['notifications', 'Notifications', 'bi-bell-fill'],
-        ].map(([path, label, icon]) => (
-          <li className="nav-item" key={path}>
-            <NavLink
-              to={path}
-              className={({ isActive }) =>
-                `nav-link d-flex align-items-center gap-2 ${isActive ? 'active' : ''}`
-              }
-              style={({ isActive }) => ({
-                color: isActive ? 'var(--te-purple-700)' : 'var(--te-gray-600)',
-                borderBottomColor: isActive ? 'var(--te-purple-700)' : 'transparent',
-                borderBottomWidth: '3px',
-                paddingBottom: '0.75rem',
-                fontWeight: isActive ? 600 : 500,
-                transition: 'all 0.2s ease'
-              })}
-            >
-              <i className={`bi ${icon}`}></i>
-              {label}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
-
       {/* Routes */}
       <Routes>
         <Route index element={<TravelerOverview />} />

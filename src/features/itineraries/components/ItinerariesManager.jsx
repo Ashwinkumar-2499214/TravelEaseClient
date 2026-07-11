@@ -203,12 +203,12 @@ export default function ItinerariesManager() {
             <table className="table table-hover align-middle mb-0">
               <thead className="table-light">
                 <tr>
-                  <th className="small fw-bold text-secondary text-uppercase ps-4">Title</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Start Date</th>
-                  <th className="small fw-bold text-secondary text-uppercase">End Date</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Status</th>
-                  {!isTraveler && <th className="small fw-bold text-secondary text-uppercase">Change Status</th>}
-                  <th className="small fw-bold text-secondary text-uppercase text-end pe-4">Actions</th>
+                  <th className="small fw-bold text-dark text-uppercase ps-4">Title</th>
+                  <th className="small fw-bold text-dark text-uppercase">Start Date</th>
+                  <th className="small fw-bold text-dark text-uppercase">End Date</th>
+                  <th className="small fw-bold text-dark text-uppercase">Status</th>
+                  {!isTraveler && <th className="small fw-bold text-dark text-uppercase">Change Status</th>}
+                  <th className="small fw-bold text-dark text-uppercase text-end pe-4">Actions</th>
                 </tr>
               </thead>
               <tbody>

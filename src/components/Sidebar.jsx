@@ -1,4 +1,3 @@
-
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../features/authentication/AuthProvider'
 
@@ -14,7 +13,7 @@ const ROLE_LINKS = {
 
   TravelAgent: [
     { to: '/dashboard/overview', label: 'Overview', icon: 'bi-house-fill' },
-    { to: '/dashboard/partners', label: 'Partners', icon: 'bi-handshake' },
+    { to: '/dashboard/partners', label: 'Partners', icon: 'bi-people-fill' },
     { to: '/dashboard/inventory', label: 'Availability', icon: 'bi-search' },
     { to: '/dashboard/notifications', label: 'Notifications', icon: 'bi-bell-fill' }
   ],
@@ -42,7 +41,7 @@ const ROLE_LINKS = {
 
   Admin: [
     { to: '/dashboard/overview', label: 'Overview', icon: 'bi-house-fill' },
-    { to: '/dashboard/partners', label: 'Partners', icon: 'bi-handshake' },
+    { to: '/dashboard/partners', label: 'Partners', icon: 'bi-people-fill' },
     { to: '/dashboard/users', label: 'Users', icon: 'bi-people-fill' },
     { to: '/dashboard/bookings', label: 'Bookings', icon: 'bi-briefcase-fill' },
     { to: '/dashboard/itineraries', label: 'Itineraries', icon: 'bi-map-fill' },
@@ -56,16 +55,24 @@ const ROLE_LINKS = {
 export default function Sidebar() {
   const { currentUser, authReady } = useAuth()
 
-  // Hide sidebar completely on login/register while auth is not ready
   if (authReady === false || !currentUser) return null
 
   const role = currentUser?.role || 'Traveler'
   const links = ROLE_LINKS[role] || ROLE_LINKS.Traveler
 
   return (
-    <aside className="sidebar bg-white border-end d-none d-lg-block" style={{ borderRightColor: '#e5e7eb', position: 'sticky', top: '70px', height: 'calc(100vh - 70px)', overflowY: 'auto', minWidth: '280px' }}>
+    <aside
+      className="sidebar bg-white border-end d-none d-lg-block"
+      style={{
+        borderRightColor: '#e5e7eb',
+        position: 'sticky',
+        top: '70px',
+        height: 'calc(100vh - 70px)',
+        overflowY: 'auto',
+        minWidth: '280px'
+      }}
+    >
       <div className="p-4">
-        {/* Role Card */}
         <div
           className="sidebar-role-card rounded-3 p-3 mb-4 text-white d-flex align-items-center gap-3"
           style={{
@@ -73,41 +80,69 @@ export default function Sidebar() {
             boxShadow: 'var(--te-shadow-md)'
           }}
         >
-          <div 
-            className="rounded-circle bg-white d-flex align-items-center justify-content-center flex-shrink-0" 
-            style={{ width: '44px', height: '44px', minWidth: '44px' }}
+          <div
+            className="rounded-circle bg-white d-flex align-items-center justify-content-center flex-shrink-0"
+            style={{
+              width: '44px',
+              height: '44px',
+              minWidth: '44px'
+            }}
           >
-            <i className="bi bi-person-fill" style={{ color: 'var(--te-purple-700)', fontSize: '1.3rem' }}></i>
+            <i
+              className="bi bi-person-fill"
+              style={{
+                color: 'var(--te-purple-700)',
+                fontSize: '1.3rem'
+              }}
+            />
           </div>
 
           <div>
-            <div className="fw-bold" style={{ fontSize: '0.85rem', textTransform: 'uppercase', lineHeight: 1.2 }}>
+            <div
+              className="fw-bold"
+              style={{
+                fontSize: '0.85rem',
+                textTransform: 'uppercase',
+                lineHeight: 1.2
+              }}
+            >
               {role}
             </div>
-            <small style={{ fontSize: '0.75rem', opacity: 0.8, lineHeight: 1.2 }}>
+
+            <small
+              style={{
+                fontSize: '0.75rem',
+                opacity: 0.8,
+                lineHeight: 1.2
+              }}
+            >
               User Account
             </small>
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="nav flex-column gap-1">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
-              className={({ isActive }) => `sidebar-nav-item d-flex align-items-center gap-3 px-3 py-2 rounded-lg text-decoration-none fw-500 transition ${
-                isActive
-                  ? 'bg-purple text-white'
-                  : 'text-gray-700'
-              }`}
+              className={({ isActive }) =>
+                `d-flex align-items-center gap-3 px-3 py-2 text-decoration-none ${
+                  isActive ? 'active' : ''
+                }`
+              }
               style={({ isActive }) => ({
-                backgroundColor: isActive ? 'var(--te-purple-700)' : 'transparent',
-                color: isActive ? 'var(--te-white)' : 'var(--te-gray-700)',
+                backgroundColor: isActive
+                  ? 'var(--te-purple-700)'
+                  : 'transparent',
+                color: isActive
+                  ? 'var(--te-white)'
+                  : 'var(--te-gray-700)',
                 borderRadius: '0.75rem',
                 transition: 'all 0.2s ease',
                 textDecoration: 'none',
-                fontSize: '0.95rem'
+                fontSize: '0.95rem',
+                fontWeight: 500
               })}
             >
               <i
@@ -116,7 +151,8 @@ export default function Sidebar() {
                   fontSize: '1.1rem',
                   flexShrink: 0
                 }}
-              ></i>
+              />
+
               <span>{link.label}</span>
             </NavLink>
           ))}

@@ -10,15 +10,24 @@ const EMPTY = { bookingId: '', amount: '', dueDate: '', description: '' }
 
 const statusBadge = (s) => {
   const label = INV_STATUS_MAP[Number(s)] || s
+  
+  // High contrast solid background colors with absolute white text
   const map = { 
-    Paid: 'bg-success bg-opacity-10 text-success', 
-    Draft: 'bg-secondary bg-opacity-10 text-secondary', 
-    Issued: 'bg-primary bg-opacity-10 text-primary', 
-    Overdue: 'bg-danger bg-opacity-10 text-danger', 
-    Cancelled: 'bg-dark bg-opacity-10 text-dark' 
+    Paid: 'bg-success text-white', 
+    Draft: 'bg-secondary text-white', 
+    Issued: 'bg-primary text-white', 
+    Overdue: 'bg-danger text-white', 
+    Cancelled: 'bg-dark text-white' 
   }
-  return <span className={`badge rounded-pill px-3 ${map[label] || 'bg-secondary bg-opacity-10 text-secondary'}`}>{label}</span>
+  
+  return (
+    <span className={`badge rounded-pill px-3 fw-semibold ${map[label] || 'bg-secondary text-white'}`}>
+      {label}
+    </span>
+  )
 }
+
+
 
 function downloadInvoicePdf(inv) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
@@ -210,14 +219,14 @@ export default function InvoicesManager() {
             <table className="table table-hover align-middle mb-0">
               <thead className="table-light">
                 <tr>
-                  <th className="small fw-bold text-secondary text-uppercase ps-4">Inventory</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Booked By</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Amount</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Invoice Date</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Due Date</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Description</th>
-                  <th className="small fw-bold text-secondary text-uppercase">Status</th>
-                  <th className="small fw-bold text-secondary text-uppercase text-end pe-4">Actions</th>
+                  <th className="small fw-bold text-dark text-uppercase ps-4">Inventory</th>
+                  <th className="small fw-bold text-dark text-uppercase">Booked By</th>
+                  <th className="small fw-bold text-dark text-uppercase">Amount</th>
+                  <th className="small fw-bold text-dark text-uppercase">Invoice Date</th>
+                  <th className="small fw-bold text-dark text-uppercase">Due Date</th>
+                  <th className="small fw-bold text-dark text-uppercase">Description</th>
+                  <th className="small fw-bold text-dark text-uppercase">Status</th>
+                  <th className="small fw-bold text-dark text-uppercase text-end pe-4">Actions</th>
                 </tr>
               </thead>
               <tbody>

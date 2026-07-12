@@ -20,7 +20,7 @@ export default function Navbar() {
       <div className="container-fluid px-4">
         {/* Brand */}
         <Link to="/dashboard" className="navbar-brand fw-bold text-purple d-flex align-items-center gap-2" style={{ fontSize: '1.4rem', minWidth: 'max-content' }}>
-          <i className="bi bi-globe" style={{ fontSize: '1.6rem' }}></i>
+          <i className="fas fa-plane-departure " ></i>
           <span className="d-none d-sm-inline">TravelEase</span>
         </Link>
 

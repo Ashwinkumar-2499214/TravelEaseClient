@@ -254,11 +254,11 @@ export default function InventorySearch() {
 
               <div className="modal-header text-white" style={{ backgroundColor: '#6f42c1' }}>
                 <div>
-                  <h5 className="modal-title fw-bold">
-                    <i className="fa-solid fa-hotel me-2" />
+                  <h5 className="modal-title fw-bold text-white d-flex align-items-center gap-2">
+                    <i className="fa-solid fa-hotel me-2 text-white" />
                     Reserve Accommodations
                   </h5>
-                  <small className="opacity-75">{bookingItem.description}</small>
+                  <small className="opacity-75 text-white">{bookingItem.description}</small>
                 </div>
                 <div className="d-flex align-items-center gap-3">
                   {booking && <div className="spinner-border spinner-border-sm text-light" role="status" />}

@@ -27,8 +27,6 @@ const statusBadge = (s) => {
   )
 }
 
-
-
 function downloadInvoicePdf(inv) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
   const W = doc.internal.pageSize.getWidth()
@@ -69,16 +67,15 @@ function downloadInvoicePdf(inv) {
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(80, 80, 80)
 
+  // Removed Invoice ID and Booking ID entirely from this configuration array
   const fields = [
-    ['Invoice ID', `#${inv.invoiceId}`],
-    ['Booking ID', `#${inv.bookingId}`],
     ['Invoice Date', formatDate(inv.invoiceDate)],
     ['Due Date', formatDate(inv.dueDate)],
     ['Status', INV_STATUS_MAP[Number(inv.status)] || inv.status],
     ['Description', inv.description || '-'],
   ]
 
-  // Two-column layout for meta
+  // Two-column layout for meta data
   fields.forEach(([label, value], i) => {
     const col = i % 2 === 0 ? 50 : W / 2 + 20
     if (i % 2 === 0 && i > 0) y += 28
@@ -138,7 +135,6 @@ export default function InvoicesManager() {
   const [editInv, setEditInv] = useState(null)
   const [form, setForm] = useState(EMPTY)
   const [preview, setPreview] = useState(null)
-
   const [userBookings, setUserBookings] = useState([])
 
   const load = () => {
@@ -160,6 +156,7 @@ export default function InvoicesManager() {
       .catch(() => {})
     setShowModal(true)
   }
+  
   const openEdit = (inv) => {
     setEditInv(inv)
     setForm({ bookingId: inv.bookingId || '', amount: inv.amount || '', dueDate: inv.dueDate?.slice(0, 10) || '', description: inv.description || '' })
@@ -194,16 +191,19 @@ export default function InvoicesManager() {
           <p className="text-muted mb-0">Financial Management System</p>
         </div>
 
-        <div className="d-flex align-items-center gap-2">
-          <button 
-            className="btn btn-primary btn-sm text-white" 
-            style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}
-            onClick={openCreate}
-          >
-            <i className="bi bi-plus-circle-fill me-2" aria-hidden="true" />
-            New Invoice
-          </button>
-        </div>
+        {/* Dynamic restriction: Do not display "New Invoice" to Admin or Finance Officer users */}
+        {!['Admin', 'Finance Officer'].includes(currentUser?.role) && (
+          <div className="d-flex align-items-center gap-2">
+            <button 
+              className="btn btn-primary btn-sm text-white" 
+              style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}
+              onClick={openCreate}
+            >
+              <i className="bi bi-plus-circle-fill me-2" aria-hidden="true" />
+              New Invoice
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Table Content / Loading */}

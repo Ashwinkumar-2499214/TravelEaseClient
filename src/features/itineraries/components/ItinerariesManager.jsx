@@ -179,14 +179,17 @@ export default function ItinerariesManager() {
           <p className="text-muted mb-0 small">Travel Planning System and Resource Registry</p>
         </div>
         <div className="d-flex align-items-center gap-2">
-          <button 
-            className="btn btn-primary btn-sm text-white" 
-            style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}
-            onClick={openCreate}
-          >
-            <i className="bi bi-plus-lg me-2" aria-hidden="true" />
-            New Itinerary
-          </button>
+          {/* Render "New Itinerary" button ONLY if the user is a Traveler */}
+          {isTraveler && (
+            <button 
+              className="btn btn-primary btn-sm text-white" 
+              style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1' }}
+              onClick={openCreate}
+            >
+              <i className="bi bi-plus-lg me-2" aria-hidden="true" />
+              New Itinerary
+            </button>
+          )}
         </div>
       </div>
 

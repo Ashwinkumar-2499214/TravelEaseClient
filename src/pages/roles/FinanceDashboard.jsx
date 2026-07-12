@@ -8,20 +8,11 @@ import PaymentsPanel from './sub/PaymentsPanel'
 export default function FinanceDashboard() {
   return (
     <div>
-      <h4 className="mb-3"><i className="fa-solid fa-coins me-2 text-warning" />Finance Officer</h4>
-      <ul className="nav nav-pills mb-3 flex-wrap gap-1">
-        {[
-          ['overview', 'Overview'],
-          ['invoices', 'Invoices'],
-          ['payments', 'Payments'],
-          ['analytics', 'Financial Trends'],
-          ['notifications', 'Notifications'],
-        ].map(([path, label]) => (
-          <li className="nav-item" key={path}>
-            <NavLink to={path} className={({ isActive }) => `nav-link ${isActive ? 'active' : 'text-secondary border'}`}>{label}</NavLink>
-          </li>
-        ))}
-      </ul>
+      <h4 className="mb-3">
+        <i className="fa-solid fa-coins me-2 text-warning" />
+        Finance Officer
+      </h4>
+      
       <Routes>
         <Route index element={<FinanceOverview />} />
         <Route path="overview" element={<FinanceOverview />} />

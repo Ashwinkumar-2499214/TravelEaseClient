@@ -151,7 +151,7 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                <div className="mb-2">
+                {/* <div className="mb-2">
                   <label className="form-label small">
                     Role
                   </label>
@@ -170,7 +170,7 @@ export default function RegisterPage() {
                       </option>
                     ))}
                   </select>
-                </div>
+                </div> */}
 
                 <div className="mb-2">
                   <label className="form-label small">

@@ -15,6 +15,10 @@ export default function LoginForm() {
   const [fpConfirm, setFpConfirm] = useState('')
   const [fpSuccess, setFpSuccess] = useState(null)
 
+  const [showPassword, setShowPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
   const { login, currentUser } = useAuth()
   const navigate = useNavigate()
 
@@ -97,10 +101,8 @@ export default function LoginForm() {
       }}
     >
       <div className="row h-100">
-
         {/* Left Section */}
         <div className="col-lg-6 d-flex align-items-center justify-content-center bg-white">
-
           <div
             className="card border-0 shadow-sm"
             style={{
@@ -109,7 +111,6 @@ export default function LoginForm() {
             }}
           >
             <div className="card-body p-4">
-
               <h2
                 className="fw-bold mb-1"
                 style={{ color: '#6f42c1' }}
@@ -129,7 +130,6 @@ export default function LoginForm() {
 
               {view === 'login' ? (
                 <form onSubmit={submit}>
-
                   <div className="mb-3">
                     <label className="form-label">
                       Email Address
@@ -151,19 +151,39 @@ export default function LoginForm() {
                       Password
                     </label>
 
-                    <input
-                      type="password"
-                      className="form-control"
-                      value={password}
-                      onChange={(e) =>
-                        setPassword(e.target.value)
-                      }
-                      required
-                    />
+                    <div className="input-group">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        className="form-control"
+                        value={password}
+                        onChange={(e) =>
+                          setPassword(e.target.value)
+                        }
+                        required
+                      />
+
+                      <span
+                        className="input-group-text bg-white"
+                        style={{ cursor: 'pointer' }}
+                        onMouseEnter={() =>
+                          setShowPassword(true)
+                        }
+                        onMouseLeave={() =>
+                          setShowPassword(false)
+                        }
+                      >
+                        <i
+                          className={`fas ${
+                            showPassword
+                              ? 'fa-eye-slash'
+                              : 'fa-eye'
+                          }`}
+                        ></i>
+                      </span>
+                    </div>
                   </div>
 
                   <div className="d-flex justify-content-between align-items-center mb-4">
-
                     <div className="form-check">
                       <input
                         className="form-check-input"
@@ -186,7 +206,6 @@ export default function LoginForm() {
                     >
                       Forgot Password?
                     </button>
-
                   </div>
 
                   <button
@@ -220,7 +239,6 @@ export default function LoginForm() {
                       Sign Up
                     </Link>
                   </div>
-
                 </form>
               ) : fpSuccess ? (
                 <>
@@ -237,7 +255,6 @@ export default function LoginForm() {
                 </>
               ) : (
                 <form onSubmit={submitForgot}>
-
                   <h5
                     className="mb-3"
                     style={{ color: '#6f42c1' }}
@@ -266,15 +283,42 @@ export default function LoginForm() {
                       New Password
                     </label>
 
-                    <input
-                      type="password"
-                      className="form-control"
-                      value={fpPassword}
-                      onChange={(e) =>
-                        setFpPassword(e.target.value)
-                      }
-                      required
-                    />
+                    <div className="input-group">
+                      <input
+                        type={
+                          showNewPassword
+                            ? 'text'
+                            : 'password'
+                        }
+                        className="form-control"
+                        value={fpPassword}
+                        onChange={(e) =>
+                          setFpPassword(
+                            e.target.value
+                          )
+                        }
+                        required
+                      />
+
+                      <span
+                        className="input-group-text bg-white"
+                        style={{ cursor: 'pointer' }}
+                        onMouseEnter={() =>
+                          setShowNewPassword(true)
+                        }
+                        onMouseLeave={() =>
+                          setShowNewPassword(false)
+                        }
+                      >
+                        <i
+                          className={`fas ${
+                            showNewPassword
+                              ? 'fa-eye-slash'
+                              : 'fa-eye'
+                          }`}
+                        ></i>
+                      </span>
+                    </div>
                   </div>
 
                   <div className="mb-3">
@@ -282,15 +326,46 @@ export default function LoginForm() {
                       Confirm Password
                     </label>
 
-                    <input
-                      type="password"
-                      className="form-control"
-                      value={fpConfirm}
-                      onChange={(e) =>
-                        setFpConfirm(e.target.value)
-                      }
-                      required
-                    />
+                    <div className="input-group">
+                      <input
+                        type={
+                          showConfirmPassword
+                            ? 'text'
+                            : 'password'
+                        }
+                        className="form-control"
+                        value={fpConfirm}
+                        onChange={(e) =>
+                          setFpConfirm(
+                            e.target.value
+                          )
+                        }
+                        required
+                      />
+
+                      <span
+                        className="input-group-text bg-white"
+                        style={{ cursor: 'pointer' }}
+                        onMouseEnter={() =>
+                          setShowConfirmPassword(
+                            true
+                          )
+                        }
+                        onMouseLeave={() =>
+                          setShowConfirmPassword(
+                            false
+                          )
+                        }
+                      >
+                        <i
+                          className={`fas ${
+                            showConfirmPassword
+                              ? 'fa-eye-slash'
+                              : 'fa-eye'
+                          }`}
+                        ></i>
+                      </span>
+                    </div>
                   </div>
 
                   <button
@@ -314,20 +389,14 @@ export default function LoginForm() {
                   >
                     Back To Login
                   </button>
-
                 </form>
               )}
-
             </div>
           </div>
-
         </div>
 
         {/* Right Travel Panel */}
         <div className="col-lg-6 d-none d-lg-block p-0 position-relative">
-
-          
-
           <div
             className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
             style={{
@@ -335,7 +404,6 @@ export default function LoginForm() {
             }}
           >
             <div className="text-center text-white px-5">
-
               <i
                 className="fas fa-plane-departure mb-4"
                 style={{
@@ -348,17 +416,16 @@ export default function LoginForm() {
               </h1>
 
               <p className="lead">
-                Book flights, manage itineraries,
+                Book Hotels, manage itineraries,
                 approve travel requests and simplify
                 corporate travel from one platform.
               </p>
 
               <div className="row g-3 mt-4">
-
                 <div className="col-6">
                   <div className="card bg-white bg-opacity-25 border-0 text-white">
                     <div className="card-body">
-                      Flight Booking
+                      Hotel Booking
                     </div>
                   </div>
                 </div>
@@ -386,14 +453,11 @@ export default function LoginForm() {
                     </div>
                   </div>
                 </div>
-
               </div>
-
             </div>
           </div>
-
         </div>
-
+        
       </div>
     </div>
   )

@@ -14,7 +14,9 @@ const inventoryService = {
     }).then(unwrap),
 
   getByPartner: (partnerId) =>
-    api.get(`/inventory?ItemType=a`).then(unwrap),
+    api.get(`/partners/${partnerId}/inventory`, {
+      params: { ItemType: 'a' },
+    }).then(unwrap),
 
   getById: (id) => api.get(`/inventory/${id}`).then(unwrap),
 

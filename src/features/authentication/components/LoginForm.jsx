@@ -28,8 +28,21 @@ export default function LoginForm() {
     }
   }, [currentUser, navigate])
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
   const submit = async (e) => {
     e.preventDefault()
+
+    // Frontend validation: valid email like ****@gmail.com and non-empty password.
+    if (!emailRegex.test(String(email).trim())) {
+      setError('Please enter a valid Email Address (example: ****@gmail.com)')
+      return
+    }
+
+    if (!password || password.length < 1) {
+      setError('Password is required')
+      return
+    }
 
     setLoading(true)
     setError(null)
@@ -49,6 +62,7 @@ export default function LoginForm() {
       setLoading(false)
     }
   }
+
 
   const submitForgot = async (e) => {
     e.preventDefault()

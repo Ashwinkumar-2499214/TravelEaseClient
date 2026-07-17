@@ -22,6 +22,7 @@ const billingService = {
     patchStatus: (id, status) => api.patch(`/payments/${id}/status`, { status }).then(unwrap),
     refund: (id, payload) => api.post(`/payments/${id}/refund`, payload).then(unwrap),
   },
+
   compliance: {
     reports: {
       list: (params = {}) => api.get('/compliance/reports', { params: clean(params) }).then(unwrap),

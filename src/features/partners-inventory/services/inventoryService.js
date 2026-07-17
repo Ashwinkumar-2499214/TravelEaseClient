@@ -3,15 +3,28 @@ import api from '../../../utils/api'
 const unwrap = (r) => r.data?.data ?? r.data
 
 const inventoryService = {
+  // GET /api/v1/inventory?pageNumber=1&pageSize=100&ItemType=a
+  // (GLOBAL inventory list)
   listAll: (params = {}) => 
     api.get('/inventory', { 
       params: { 
         pageNumber: 1, 
         pageSize: 100, 
-        ItemType: 'a',
+        ItemType: params?.ItemType ?? 'a',
         ...params 
       } 
     }).then(unwrap),
+
+  // GET /api/v1/partners/:partnerId/inventory?ItemType=a
+  // (Partner-specific inventory list)
+  listForPartner: (partnerId, params = {}) =>
+    api.get(`/partners/${partnerId}/inventory`, {
+      params: {
+        ItemType: params?.ItemType ?? 'a',
+        ...params,
+      },
+    }).then(unwrap),
+
 
   getByPartner: (partnerId) =>
     api.get(`/partners/${partnerId}/inventory`, {

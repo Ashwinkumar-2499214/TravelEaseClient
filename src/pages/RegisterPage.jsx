@@ -11,6 +11,8 @@ const ROLES = [
   { label: 'Admin', value: 6 }
 ]
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export default function RegisterPage() {
   const [form, setForm] = useState({
     name: '',
@@ -33,11 +35,33 @@ export default function RegisterPage() {
     }))
   }
 
+  const validate = () => {
+    const email = String(form.email ?? '').trim()
+    if (!emailRegex.test(email)) return 'Please enter a valid Email Address (example: ****@gmail.com)'
+
+    if (!form.password || String(form.password).length < 8) return 'Password must be at least 8 characters'
+
+    if (String(form.password) !== String(form.confirmPassword)) return 'Passwords do not match'
+
+    const fullName = String(form.name ?? '').trim()
+    if (!fullName) return 'Full Name is required'
+
+    // Allow only string-like input for name; reject empty/invalid.
+    if (!/^[A-Za-z\s.'-]{2,}$/.test(fullName)) return 'Full Name should be a valid name (letters only)'
+
+    const phone = String(form.phone ?? '').trim()
+    if (!phone) return 'Phone Number is required'
+
+    return null
+  }
+
+
   const submit = async (e) => {
     e.preventDefault()
 
-    if (form.password !== form.confirmPassword) {
-      setError('Passwords do not match')
+    const validationError = validate()
+    if (validationError) {
+      setError(validationError)
       return
     }
 
@@ -151,27 +175,6 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                {/* <div className="mb-2">
-                  <label className="form-label small">
-                    Role
-                  </label>
-
-                  <select
-                    className="form-select form-select-sm"
-                    value={form.role}
-                    onChange={setField('role')}
-                  >
-                    {ROLES.map((role) => (
-                      <option
-                        key={role.value}
-                        value={role.value}
-                      >
-                        {role.label}
-                      </option>
-                    ))}
-                  </select>
-                </div> */}
-
                 <div className="mb-2">
                   <label className="form-label small">
                     Password
@@ -240,8 +243,6 @@ export default function RegisterPage() {
         </div>
         {/* Right Travel Panel */}
         <div className="col-lg-6 d-none d-lg-block p-0 position-relative">
-
-
 
           <div
             className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
@@ -312,3 +313,4 @@ export default function RegisterPage() {
     </div>
   )
 }
+

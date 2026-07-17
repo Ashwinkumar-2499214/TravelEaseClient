@@ -83,7 +83,11 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
   const load = () => {
     setLoading(true)
     setError(null)
-    return bookingsService.list()
+
+    // Travelers should fetch only their own bookings.
+    const params = isTraveler ? { userId: currentUser?.id } : {}
+
+    return bookingsService.list(params)
       .then(data => {
         const list = data ? (Array.isArray(data) ? data : [data]) : []
         if (pendingOnly) {
@@ -96,12 +100,19 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
       .finally(() => setLoading(false))
   }
 
+
   useEffect(() => {
     if (currentUser) {
       load()
-      inventoryService.listAll().then(data => setInventory(Array.isArray(data) ? data : [])).catch(() => {})
+
+      // For New Booking, inventory should come from partner inventory endpoint with ItemType=a.
+      // If user selects a partner later, you can switch to listForPartner(partnerId, { ItemType: 'a' }).
+      inventoryService.listAll({ ItemType: 'a' })
+        .then(data => setInventory(Array.isArray(data) ? data : []))
+        .catch(() => {})
     }
   }, [currentUser])
+
 
   const openCreate = () => {
     if (!isTraveler) return
@@ -277,16 +288,7 @@ export default function BookingsManager({ agentMode = false, approvalMode = fals
               </div>
             </div>
             
-            {/* Hides booking button from managers/agents */}
-            {isTraveler && (
-              <button
-                className="btn btn-primary btn-sm flex-shrink-0"
-                onClick={openCreate}
-                style={{ backgroundColor: 'var(--te-purple-700)', borderColor: 'var(--te-purple-700)' }}
-              >
-                <i className="bi bi-plus-circle me-2"></i>New Booking
-              </button>
-            )}
+
           </div>
         </div>
       </div>

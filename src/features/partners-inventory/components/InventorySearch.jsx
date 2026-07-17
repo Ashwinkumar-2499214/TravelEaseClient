@@ -271,11 +271,32 @@ export default function InventorySearch() {
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label className="form-label text-muted small fw-bold text-uppercase">Start Date</label>
-                      <input type="date" className="form-control" value={bookForm.startDate} onChange={e => setBookForm(p => ({ ...p, startDate: e.target.value }))} required />
+                      <input
+                        type="date"
+                        className="form-control"
+                        min={new Date().toISOString().slice(0, 10)}
+                        value={bookForm.startDate}
+                        onChange={e => {
+                          const startDate = e.target.value
+                          setBookForm(p => {
+                            // If user moves start forward past the current end, clamp end to start
+                            const endDate = p.endDate && p.endDate < startDate ? startDate : p.endDate
+                            return { ...p, startDate, endDate }
+                          })
+                        }}
+                        required
+                      />
                     </div>
                     <div className="col-md-6">
                       <label className="form-label text-muted small fw-bold text-uppercase">End Date</label>
-                      <input type="date" className="form-control" value={bookForm.endDate} onChange={e => setBookForm(p => ({ ...p, endDate: e.target.value }))} required />
+                      <input
+                        type="date"
+                        className="form-control"
+                        min={bookForm.startDate || new Date().toISOString().slice(0, 10)}
+                        value={bookForm.endDate}
+                        onChange={e => setBookForm(p => ({ ...p, endDate: e.target.value }))}
+                        required
+                      />
                     </div>
                   </div>
 

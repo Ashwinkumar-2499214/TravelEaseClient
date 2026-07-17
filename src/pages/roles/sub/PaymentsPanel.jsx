@@ -28,15 +28,36 @@ export default function PaymentsPanel() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  const getTodayRange = () => {
+    const now = new Date()
+    const start = new Date(now)
+    start.setHours(0, 0, 0, 0)
+
+    const end = new Date(now)
+    end.setHours(23, 59, 59, 999)
+
+    return {
+      fromDate: start.toISOString(),
+      toDate: end.toISOString(),
+    }
+  }
+
   const load = () => {
     setLoading(true)
-    billingService.payments.list()
+    const { fromDate, toDate } = getTodayRange()
+
+    billingService.payments
+      .list({
+        FromDate: fromDate,
+        ToDate: toDate,
+      })
       .then(res => {
         setPayments(res?.data || res || [])
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }
+
 
   useEffect(() => { load() }, [])
 

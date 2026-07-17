@@ -3,14 +3,21 @@ import api from '../../../utils/api'
 const unwrap = (r) => r.data?.data ?? r.data
 
 const partnersService = {
+  // Example endpoint: GET /api/v1/partners?SearchTerm=a&pageNumber=1&pageSize=50
+  // If SearchTerm is not provided, backend defaults are handled by passing 'a'.
   list: (params = {}) => {
-    return api.get('/partners', { 
-      params: { 
-        pageNumber: 1, 
-        pageSize: 50, 
-        SearchTerm: '', 
-        ...params 
-      } 
+    const safeParams = { ...params }
+    if (safeParams.SearchTerm === undefined || safeParams.SearchTerm === null) {
+      safeParams.SearchTerm = 'a'
+    }
+
+    return api.get('/partners', {
+      params: {
+        pageNumber: 1,
+        pageSize: 50,
+        SearchTerm: '',
+        ...safeParams
+      }
     }).then(unwrap)
   },
   
